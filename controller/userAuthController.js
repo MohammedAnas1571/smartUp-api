@@ -5,31 +5,32 @@ import { CustomError } from "../utils/customError.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import OTP from "../model/otpModel.js";
 import jwt from "jsonwebtoken";
+import Tutor from "../model/tutorModel.js"
 
 export const userSignUp = catchAsync(async (req, res, next) => {
-  const { username, email } = req.body;
-
+  const { username, email,role,password:newPassword} = req.body;
   const user = await User.findOne({ email });
-  if (user) next(new CustomError("Email is already Exist", 409));
-  else {
-    
-    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-
+  if (user) return  next(new CustomError("Email is already Exist", 409));
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
+      role,
     });
     await newUser.save();
     await sendEmail(newUser);
-    const { password, ...rest } = newUser._doc;
-    res.status(200).json(rest)
-  }
+    const rest ={
+      email:newUser._doc.email,
+      id :newUser._doc._id,
+      username:newUser._doc.username,
+      role:newUser._doc.role
+    }
+    res.status(200).json({user:rest})
 });
 
 export const userSignIn = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
-
   const user = await User.findOne({ email });
   if (!user)
     return next(new CustomError("User is not Found please register", 401));
@@ -40,7 +41,12 @@ export const userSignIn = catchAsync(async (req, res, next) => {
   const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
     expiresIn: "7d",
   });
-  const { password: hashedPassword, ...rest } = user._doc;
+  const rest ={
+    email:user._doc.email,
+    id :user._doc._id,
+    username:user._doc.username,
+    role:user._doc.role
+  }
   res
     .cookie("access_token", token, {
       httpOnly: true,
@@ -48,35 +54,40 @@ export const userSignIn = catchAsync(async (req, res, next) => {
       path:"/"
     })
     .status(200)
-    .json(rest);
+    .json({user:rest});
 });
 
 export const otpValidaion = catchAsync(async (req, res, next) => {
-  const { otp, id } = req.body;
-  console.log(id)
-  console.log(122)
-  const validOtp = await OTP.findOne({userId:id})
-  console.log(validOtp)
-  if (!validOtp) return next(new CustomError("No Valid Otp found", 404));
+  const { otp, id, role } = req.body;
+  const validOtp = await OTP.findOne({ userId: id });
+
+
+  if (!validOtp) return next(new CustomError("No Valid Otp Found", 404));
   const isMatch = await bcrypt.compare(otp, validOtp.otp);
   if (!isMatch) return next(new CustomError("Invalid Token ", 401));
-  const user = await User.findByIdAndUpdate(validOtp.userId, {
-    isVerified: true,
-  });
+  let user;
+  if (role === "User") {
+    user = await User.findByIdAndUpdate(validOtp.userId, {
+      isVerified: true,
+    });
+  } else {
+    user = await Tutor.findByIdAndUpdate(validOtp.userId, {
+      isVerified: true,
+    });
+  }
+  
+  await OTP.deleteOne({ userId: id });
   const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
     expiresIn: "7d",
   });
-  const { password: hashedPassword, ...rest } = user._doc;
-  res
-    .cookie("access_token", token, {
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path:"/"
-    })
-    
-   
-  
-  return res.status(200).json({rest, message: "Email Verification Successful" });
+  const { password, ...rest } = user._doc;
+  res.cookie("access_token", token, {
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
+  });
+
+  return res.status(200).json({ user:rest, message: "Email Verification Successful" });
 });
 
 
@@ -99,11 +110,14 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   console.log(password)
   console.log(12552);
   jwt.verify(token, process.env.SECRET, async (err) => {
-    if (err) return next(new CustomError("invalid token", 401));
+    if (err) return next(new CustomError("Invalid token", 401));
   
       const hashedPassword = bcrypt.hashSync(password, 10);
-      await User.findById(id, { password: hashedPassword });
+      await User.findByIdAndUpdate(id, { password: hashedPassword });
       res.status(200).json("Password is changed");
    
   });
 });
+
+
+

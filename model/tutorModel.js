@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const tutorSchema = new mongoose.Schema({
     username: {
         type: String,
         required: true
@@ -10,19 +10,14 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique:true
     },
-    role:{
-        type:String,
-        default: 'User'
-    },
    
     password: {
         type: String,
         required: true
     },
-    isBlocked:{
-        type:Boolean,
-        default:false
-
+    role:{
+        type:String,
+        default: 'Tutor'
     },
     isVerified: {
         type: Boolean,
@@ -34,6 +29,6 @@ const userSchema = new mongoose.Schema({
     }
 },{ timestamps: true });
 
-const User = mongoose.model("User", userSchema);
+const Tutor = mongoose.model("Tutor", tutorSchema);
 
-export default User;
+export default Tutor;

@@ -1,7 +1,6 @@
 import Joi from "joi";
 
-export const userValidator = (req, res, next) => {
-    console.log(req.body);
+export const signUpValidator = (req, res, next) => {
     const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/; 
     
     const signUpSchema = Joi.object({
@@ -20,11 +19,9 @@ export const userValidator = (req, res, next) => {
         confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
             'any.only': 'Passwords must match',
             'any.required': 'Please confirm your password'
-        })
+        }),
     });
-    console.log(1223);
     const { error } = signUpSchema.validate(req.body);
-    
     if (error) {
         return res.status(400).json({ error: error.details[0].message });
     } else {

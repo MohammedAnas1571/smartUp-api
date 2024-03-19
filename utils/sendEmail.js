@@ -14,16 +14,27 @@ let transporter = nodeMailer.createTransport({
   },
 });
 
-export const sendEmail = async ({ username, email, _id }, token) => {
+export const sendEmail = async ({ username, email, _id,role }, token) => {
   try {
-    if (token) {
-      const mail = {
+    if (token ) {
+      let mail
+       if(role === "User"){
+         mail = {
         from: process.env.EMAIL,
         to: email,
         subject: "Verification for  your account",
         text: `${process.env.ORIGIN}/verify-email/${_id}/${token}" `,
       };
-
+    }
+      else{
+        mail = {
+          from: process.env.EMAIL,
+          to: email,
+          subject: "Verification for  your account",
+          text: `${process.env.ORIGIN}/instructor/verify-email/${_id}/${token}" `,
+        };
+      }
+    
       await transporter.sendMail(mail);
     } else {
       const otp = Math.floor(1000 + Math.random() * 9000);
