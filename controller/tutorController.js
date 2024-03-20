@@ -22,7 +22,8 @@ export const tutorSignUp = catchAsync(async (req, res, next) => {
     email:newUser._doc.email,
     id :newUser._doc._id,
     username:newUser._doc.username,
-    role:newUser._doc.role
+    role:newUser._doc.role,
+    profilePhoto:newUser._doc.profilePhoto
   }
   res.status(200).json({ user: rest });
 });
@@ -43,7 +44,8 @@ export const tutorSignIn = catchAsync(async (req, res, next) => {
     email:user._doc.email,
     id :user._doc._id,
     username:user._doc.username,
-    role:user._doc.role
+    role:user._doc.role,
+    profilePhoto:user._doc.profilePhoto
   }
   res
     .cookie("access_token", token, {
