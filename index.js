@@ -8,6 +8,7 @@ import adminRoute from './Route/adminRoute.js'
 import Tutor from "./model/tutorModel.js";
 import User from "./model/userModel.js";
 import cron from "node-cron";
+import cookieParser from 'cookie-parser'
 
 const app = express();
 connection();
@@ -18,6 +19,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -35,8 +37,7 @@ app.use((err, req, res, next) => {
     message,
   });
 });
-
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("*/30 * * * *", async () => {
   try {
     await Tutor.deleteMany({ isVerified: false });
     await User.deleteMany({ isVerified: false });

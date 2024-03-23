@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+
 export const signUpValidator = (req, res, next) => {
     const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/; 
     
@@ -48,3 +49,68 @@ export const signvalidation = (req, res, next) => {
         next();
     }
 }
+export const courseValidation = (req, res, next) => {
+    const bodySchema = Joi.object({
+        title: Joi.string().min(4).required().messages({
+            'string.min': 'Minimum 4 characters are required for the title.',
+            'any.required': 'Title is required.',
+        }),
+        subTitle: Joi.string().min(4).required().messages({
+            'string.min': 'Minimum 4 characters are required for the subtitle.',
+            'any.required': 'Subtitle is required.',
+        }),
+        catagory: Joi.string().required().messages({
+            'any.required': 'Category is required.',
+        }),
+        tags: Joi.string().required().messages({
+            'any.required': 'Tags is required.',
+        }),
+        price: Joi.number().required().messages({
+            'number.base': 'Price should be a number.',
+            'any.required': 'Price is required.',
+        }),
+        description: Joi.string().min(20).required().messages({
+            'string.min': 'Minimum 20 characters are required for the description.',
+            'any.required': 'Description is required.',
+        }),
+        level: Joi.string().required().messages({
+            'any.required': 'Level is required.',
+        }),
+    });
+    
+    const fileSchema = Joi.object({
+        fieldname: Joi.string().required().valid('image').messages({
+            'any.only': 'Invalid fieldname. Expected "image".',
+            'any.required': 'Fieldname is required.',
+        }),
+        originalname: Joi.string().required().messages({
+            'any.required': 'Originalname is required.',
+        }),
+        encoding: Joi.string().required().messages({
+            'any.required': 'Encoding is required.',
+        }),
+        mimetype: Joi.string().valid('image/jpeg', 'image/png', 'image/gif').required().messages({
+            'any.only': 'Invalid mimetype. Only JPEG, PNG, and GIF are allowed.',
+            'any.required': 'Mimetype is required.',
+        }),
+        buffer: Joi.binary().required().messages({
+            'any.required': 'Buffer is required.',
+        }),
+        size: Joi.number().required().messages({
+            'number.base': 'Size should be a number.',
+            'any.required': 'Size is required.',
+        }),
+    });
+
+    const { error: bodyError } = bodySchema.validate(req.body);
+    const { error: fileError } = fileSchema.validate(req.file);
+
+    if (bodyError || fileError) {
+        const errors = [];
+        if (bodyError) errors.push(bodyError.details[0].message);
+        if (fileError) errors.push(fileError.details[0].message);
+        return res.status(400).json({ error: errors.join('; ') });
+    } else {
+        next();
+    }
+};
