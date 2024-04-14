@@ -1,14 +1,29 @@
 import express from "express"
 import {signUpValidator,signvalidation} from "../middleware/validation.js"
-import { userSignUp,userSignIn,otpValidaion,emailVerification,resetPassword } from "../controller/userAuthController.js"
-
+import { userSignUp,userSignIn,otpValidation,emailVerification,resetPassword,signOut } from "../controller/userAuthController.js"
+import {passportController} from "../utils/passport.js"
+import {getCourses,aboutCourse} from '../controller/courseController.js'
  const router = express.Router()
 
  router.post("/signUp",signUpValidator,userSignUp)
  router.post("/signIn",signvalidation,userSignIn)
-  router.post("/otp",otpValidaion)
+  router.post("/otp",otpValidation)
   router.post("/verification/",emailVerification)
   router.post("/change_Password/:id/:token",resetPassword)
+  router.get("/logout",signOut)
+  router.get("/course",getCourses)
+  router.get("/getDetails/:id",aboutCourse)
+  router.get('/googleAuth',
+  passportController.authenticate('google', { scope: ['profile','email'] }));
+  
+  router.get('/google/callback', 
+  passportController.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+  
+    res.redirect('/');
+  });
+
+
 
 
 

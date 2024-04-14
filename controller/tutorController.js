@@ -19,11 +19,8 @@ export const tutorSignUp = catchAsync(async (req, res, next) => {
   await newUser.save();
   await sendEmail(newUser);
   const rest ={
-    email:newUser._doc.email,
     id :newUser._doc._id,
-    username:newUser._doc.username,
-    role:newUser._doc.role,
-    profilePhoto:newUser._doc.profilePhoto
+    role:newUser._doc.role
   }
   res.status(200).json({ user: rest });
 });
@@ -35,7 +32,7 @@ export const tutorSignIn = catchAsync(async (req, res, next) => {
     return next(new CustomError("User is Not Found Please Register", 401));
   const isValid = bcrypt.compareSync(newPassword, user.password);
 
-  if (!isValid) return next(new CustomError("Invalid Username Or Password !", 401));
+  if (!isValid) return next(new CustomError("Invalid Username Or Password ", 401));
 
   const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
     expiresIn: "7d",
@@ -45,7 +42,8 @@ export const tutorSignIn = catchAsync(async (req, res, next) => {
     id :user._doc._id,
     username:user._doc.username,
     role:user._doc.role,
-    profilePhoto:user._doc.profilePhoto
+    profilePhoto:user._doc.profilePhoto,
+    isVerified:user._doc.isVerified,
   }
   res
     .cookie("access_token", token, {
@@ -54,7 +52,7 @@ export const tutorSignIn = catchAsync(async (req, res, next) => {
       path: "/",
     })
     .status(200)
-    .json(rest);
+    .json({ user: rest });
 });
 
 export const emailVerification = catchAsync(async (req, res, next) => {

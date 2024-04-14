@@ -10,9 +10,12 @@ const courseSchema = new Schema({
     level: { type: String, required: true },
      price: {type:Number,required:true},
      description: {type:String,required:true},
+     status: {
+        type: String,
+        enum: ['pending', 'approved'],
+        default: 'pending'},
      image: {type:String,required:true}
 
-
-})
+},{timestamps:true})
 const course = model("Course",courseSchema)
 export default course

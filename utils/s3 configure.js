@@ -21,38 +21,18 @@ const s3 = new S3Client({
 });
 
 export const imageStore = async (file, imageName) => {
-  try {
     const buffer = await sharp(file.buffer)
       .resize({ height: 500, width: 500, fit: "contain" })
       .toBuffer();
-    const params = {
-      Bucket: bucket,
-      Key: imageName,
-      Body: buffer,
-      ContentType: file.mimetype,
-    };
-    const command = new PutObjectCommand(params);
-    await s3.send(command);
-  } catch (err) {
-    console.log(err.message);
-  }
-};
-
-
-// 
-export const imageAccess = async (imageName) => {
-  try{
-  
-    const getObjectParams = {
-      Bucket: bucket,
-      Key: imageName,
-    };
-    const command = new GetObjectCommand(getObjectParams);
-    const url = await getSignedUrl(s3, command);
-    return url;
-  }
-catch(err){
-
-  console.log(err.message)
+      const command = new PutObjectCommand({
+        Bucket: bucket,
+        Key: imageName,
+        Body:buffer,
+        ContentType: file.mimetype 
+    })
+    const fileLink = `https://${bucket}.s3.${region}.amazonaws.com/${imageName}`
+     await s3.send(command)
+    return   fileLink 
 }
-}
+
+

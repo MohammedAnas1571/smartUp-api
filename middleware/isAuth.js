@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 export const verifyToken = catchAsync(async (req, res, next) => {
     const token = req.cookies.access_token;
-    console.log(token);
+  
     
     if (!token) {
         return next(new CustomError("Token Not Found", 404));
@@ -12,6 +12,6 @@ export const verifyToken = catchAsync(async (req, res, next) => {
 
     const user = jwt.verify(token, process.env.TOKEN);
     req.user = user;
-    console.log(user);
+   
     next();
 });
