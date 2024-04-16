@@ -1,17 +1,27 @@
 import catchAsync from "../utils/catchAsync.js";
 import { CustomError } from "../utils/customError.js";
-import { imageStore } from "../utils/s3 configure.js";
+import { imageStore,videoStore } from "../utils/s3 configure.js";
 import crypto from "crypto";
 import Course from "../model/courseModel.js";
 
 export const courseUpload = catchAsync(async (req, res, next) => {
-  const { title, subTitle, catagory, level, tags, price, description } =
-    req.body;
+  const {title,
+    subTitle,
+    catagory,
+    level,
+    tags,
+    price,
+    description,
+    content,} = req.body
+ 
   const imageName = crypto
     .createHash("md5")
-    .update(req.file.buffer)
+    .update(req.files.image[0].buffer)
     .digest("hex");
-   const fileName = await imageStore(req.file, imageName);
+   const fileName = await imageStore(req.files.image[0], imageName);
+   const videoName = crypto.createHash("md5").update(req.files.preview[0].buffer).digest("hex") + ".mp4";
+const videoFileName = await videoStore(req.files.preview[0], videoName);
+console.log("dfjhsaflkn")
        await Course.create({
     tutorId: req.user.id,
     title,
@@ -21,7 +31,9 @@ export const courseUpload = catchAsync(async (req, res, next) => {
     tags,
     price,
     description,
+    content,
     image: fileName,
+    preview:videoFileName,
   });
   return res.status(201).json("courses are  uploaded");
 });

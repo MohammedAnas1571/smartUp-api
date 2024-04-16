@@ -73,32 +73,23 @@ export const courseValidation = (req, res, next) => {
             'string.min': 'Minimum 20 characters are required for the description.',
             'any.required': 'Description is required.',
         }),
+        content: Joi.string().min(20).required().messages({
+            'string.min': 'Minimum 20 characters are required for the description.',
+            'any.required': 'Content is required.',
+        }),
         level: Joi.string().required().messages({
             'any.required': 'Level is required.',
         }),
     });
     
     const fileSchema = Joi.object({
-        fieldname: Joi.string().required().valid('image').messages({
-            'any.only': 'Invalid fieldname. Expected "image".',
-            'any.required': 'Fieldname is required.',
-        }),
-        originalname: Joi.string().required().messages({
-            'any.required': 'Originalname is required.',
-        }),
-        encoding: Joi.string().required().messages({
-            'any.required': 'Encoding is required.',
-        }),
-        mimetype: Joi.string().valid('image/jpeg', 'image/png', 'image/gif').required().messages({
-            'any.only': 'Invalid mimetype. Only JPEG, PNG, and GIF are allowed.',
+        
+        mimetype: Joi.string().valid('image/jpeg', 'image/png', 'image/gif,video/mp4').required().messages({
+            'any.only': 'Invalid mimetype. Only JPEG, PNG,GIF and mp4 are allowed.',
             'any.required': 'Mimetype is required.',
         }),
         buffer: Joi.binary().required().messages({
             'any.required': 'Buffer is required.',
-        }),
-        size: Joi.number().required().messages({
-            'number.base': 'Size should be a number.',
-            'any.required': 'Size is required.',
         }),
     });
 

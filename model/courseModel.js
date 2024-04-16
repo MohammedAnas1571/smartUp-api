@@ -10,6 +10,8 @@ const courseSchema = new Schema({
     level: { type: String, required: true },
      price: {type:Number,required:true},
      description: {type:String,required:true},
+     content: {type:String,required:true},
+     preview:{type:String,required:true},
      status: {
         type: String,
         enum: ['pending', 'approved'],

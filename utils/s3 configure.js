@@ -1,7 +1,7 @@
 import {
   S3Client,
   PutObjectCommand,
-  GetObjectCommand,
+
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import "dotenv/config";
@@ -34,5 +34,18 @@ export const imageStore = async (file, imageName) => {
      await s3.send(command)
     return   fileLink 
 }
+export const videoStore = async (file, videoName) => {
+  const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: videoName,
+      Body: file.buffer,
+      ContentType: file.mimetype 
+  });
 
+  const videoLink = `https://${bucket}.s3.${region}.amazonaws.com/${videoName}`;
+
+  await s3.send(command);
+  
+  return videoLink;
+}
 

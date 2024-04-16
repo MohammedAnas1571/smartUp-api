@@ -12,7 +12,7 @@ const upload = multer()
 
   router.post("/verification/",emailVerification)
   router.post("/change_Password/:id/:token",resetPassword)
-  router.post("/course",verifyToken,upload.single("image"),courseValidation,courseUpload)
+  router.post("/course",verifyToken, upload.fields([{ name: 'preview', maxCount: 1 }, { name: 'image', maxCount: 1 }]),courseValidation,courseUpload)
   
  
   router.get("/myCourses/",verifyToken,myCourses)
