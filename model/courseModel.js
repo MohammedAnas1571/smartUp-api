@@ -16,7 +16,19 @@ const courseSchema = new Schema({
         type: String,
         enum: ['pending', 'approved'],
         default: 'pending'},
-     image: {type:String,required:true}
+     image: {type:String,required:true},
+     chapters:[
+        { module:{
+            type:String,
+        },
+        order: {
+            type: Number,
+        }, 
+        videos:{
+            type: String
+        }
+        }
+     ],
 
 },{timestamps:true})
 const course = model("Course",courseSchema)

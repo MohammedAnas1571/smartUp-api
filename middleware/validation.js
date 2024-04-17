@@ -40,6 +40,9 @@ export const signvalidation = (req, res, next) => {
         password: Joi.string().pattern(passwordPattern).required().messages({
             'string.pattern.base': 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one special character, and one number',
             'any.required': 'Password is required'
+        }),
+        token: Joi.string().required().messages({
+           "any.required": "token is required"
         })
     })
     const { error } = signInSchema.validate(req.body);

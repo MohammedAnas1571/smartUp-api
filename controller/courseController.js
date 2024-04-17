@@ -21,7 +21,7 @@ export const courseUpload = catchAsync(async (req, res, next) => {
    const fileName = await imageStore(req.files.image[0], imageName);
    const videoName = crypto.createHash("md5").update(req.files.preview[0].buffer).digest("hex") + ".mp4";
 const videoFileName = await videoStore(req.files.preview[0], videoName);
-console.log("dfjhsaflkn")
+
        await Course.create({
     tutorId: req.user.id,
     title,
@@ -73,3 +73,19 @@ export const myCourses = catchAsync(async (req, res, next) => {
 
   res.status(200).json({ courses });
 });
+
+export const addingModule = catchAsync(async(req,res,next)=>{
+  const {module,order} = req.body
+
+  const videoName = crypto.createHash("md5").update(req.file.buffer).digest("hex") + ".mp4";
+  const videoFileName = await videoStore(req.file.buffer, videoName);
+  console.log("dfjksdfhsk")
+  await Course.({
+    chapters:[
+      {module,
+       order,
+      video:videoFileName}
+    ]
+  });
+  res.status(201).json("Added new module")
+})

@@ -3,10 +3,11 @@ import {signUpValidator,signvalidation} from "../middleware/validation.js"
 import { userSignUp,userSignIn,otpValidation,emailVerification,resetPassword,signOut } from "../controller/userAuthController.js"
 import {passportController} from "../utils/passport.js"
 import {getCourses,aboutCourse} from '../controller/courseController.js'
+import { cloudflare } from "../middleware/CloudFire.js"
  const router = express.Router()
-
+ 
  router.post("/signUp",signUpValidator,userSignUp)
- router.post("/signIn",signvalidation,userSignIn)
+ router.post("/signIn",cloudflare,signvalidation,userSignIn)
   router.post("/otp",otpValidation)
   router.post("/verification/",emailVerification)
   router.post("/change_Password/:id/:token",resetPassword)
