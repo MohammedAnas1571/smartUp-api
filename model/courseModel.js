@@ -14,22 +14,14 @@ const courseSchema = new Schema({
      preview:{type:String,required:true},
      status: {
         type: String,
-        enum: ['pending', 'approved'],
-        default: 'pending'},
+        enum: ['Pending', 'Approved'],
+        default: 'Pending'},
      image: {type:String,required:true},
-     chapters:[
-        { module:{
-            type:String,
-        },
-        order: {
-            type: Number,
-        }, 
-        videos:{
-            type: String
-        }
-        }
-     ],
-
+     modules: [{
+        type: mongoose.Types.ObjectId,
+        ref: 'Chapters'
+    }]
+  
 },{timestamps:true})
 const course = model("Course",courseSchema)
 export default course

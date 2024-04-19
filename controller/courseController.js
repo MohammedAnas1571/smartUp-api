@@ -3,6 +3,8 @@ import { CustomError } from "../utils/customError.js";
 import { imageStore,videoStore } from "../utils/s3 configure.js";
 import crypto from "crypto";
 import Course from "../model/courseModel.js";
+import Chapters from "../model/chapterModel.js"
+import { ADDRGETNETWORKPARAMS } from "dns";
 
 export const courseUpload = catchAsync(async (req, res, next) => {
   const {title,
@@ -34,6 +36,7 @@ const videoFileName = await videoStore(req.files.preview[0], videoName);
     content,
     image: fileName,
     preview:videoFileName,
+    chapters:[]
   });
   return res.status(201).json("courses are  uploaded");
 });
@@ -75,17 +78,14 @@ export const myCourses = catchAsync(async (req, res, next) => {
 });
 
 export const addingModule = catchAsync(async(req,res,next)=>{
-  const {module,order} = req.body
-
+  const {modules,order,id} = req.body
+  console.log(modules ,order,id)
   const videoName = crypto.createHash("md5").update(req.file.buffer).digest("hex") + ".mp4";
   const videoFileName = await videoStore(req.file.buffer, videoName);
-  console.log("dfjksdfhsk")
-  await Course.({
-    chapters:[
-      {module,
-       order,
-      video:videoFileName}
-    ]
-  });
-  res.status(201).json("Added new module")
+  console.log("dofihsdfnisdk")
+  const chapters =  await Chapters.create({
+    modules,order,videoUrl : videoFileName
+  })
+    await  Course.findByIdAndUpdate(id,{ $push:{modules:chapters._id}})
+  res.status(201).json("Added new chapter")
 })

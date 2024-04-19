@@ -10,7 +10,12 @@ const tutorSchema = new mongoose.Schema({
         required: true,
         unique:true
     },
-   
+    about:{
+        type:String
+    },
+    profession:{
+    type:String
+    },
     password: {
         type: String,
         required: true

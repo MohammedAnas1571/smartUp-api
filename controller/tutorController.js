@@ -4,6 +4,7 @@ import catchAsync from "../utils/catchAsync.js";
 import { CustomError } from "../utils/customError.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import jwt from "jsonwebtoken";
+import path from "path"
 
 export const tutorSignUp = catchAsync(async (req, res, next) => {
   const { username, email,password: newPassword } = req.body;
@@ -81,3 +82,42 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   });
 });
 
+export const getProfile = catchAsync(async (req, res,next) =>{
+  const id = req.user.id
+  if(!id){
+    return  next(new CustomError('Not authorized to perform this action',401))
+  }
+  const tutor = await Tutor.findById(id);
+
+  const { username, email, profession, about,profilePhoto } = tutor._doc;
+  
+  let responseData = { username, email,profilePhoto };
+  
+  if (profession !== undefined) {
+    responseData.profession = profession;
+  }
+  
+  if (about !== undefined) {
+    responseData.about = about;
+  }
+  
+  res.status(200).json(responseData);
+} )
+
+export const updateProfile =  catchAsync(async (req,res,next)=>{
+  const userId = req.user.id;
+  const{username,email,profession,about}=req.body
+  const tutor = await Tutor.findById(userId);
+  if (tutor && tutor.profilePhoto && tutor.profilePhoto.startsWith('public/')) {
+    const oldPhotoPath = path.join(__dirname, '../../', tutor.profilePhoto);
+    fs.unlinkSync(oldPhotoPath);
+  }
+  const  imgUrl= req.file.path
+   
+  const updatedUser = await Tutor.findByIdAndUpdate(
+    userId,
+    { $set: { username, email, profilePhoto:imgUrl,profession,about } },
+    { new: true } 
+  )
+  res.status(200).json("Profile Updated")
+})
