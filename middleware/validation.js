@@ -41,9 +41,7 @@ export const signvalidation = (req, res, next) => {
         
             'any.required': 'Password is required'
         }),
-        // token: Joi.string().required().messages({
-        //    "any.required": "token is required"
-        // })
+        token: Joi.string()
     })
     const { error } = signInSchema.validate(req.body);
     if (error) {

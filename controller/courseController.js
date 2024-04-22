@@ -4,7 +4,8 @@ import { imageStore,videoStore } from "../utils/s3 configure.js";
 import crypto from "crypto";
 import Course from "../model/courseModel.js";
 import Chapters from "../model/chapterModel.js"
-import { ADDRGETNETWORKPARAMS } from "dns";
+import { stripePayment,getEvent } from "../utils/stripe.js";
+
 
 export const courseUpload = catchAsync(async (req, res, next) => {
   const {title,
@@ -86,6 +87,17 @@ export const addingModule = catchAsync(async(req,res,next)=>{
   const chapters =  await Chapters.create({
     modules,order,videoUrl : videoFileName
   })
-    await  Course.findByIdAndUpdate(id,{ $push:{modules:chapters._id}})
+    await  Course.findByIdAndUpdate(id,{ $push:{modules:chapters._id}},{new:true})
   res.status(201).json("Added new chapter")
 })
+
+export const purchaseCoures = catchAsync(async(req,res,next)=>{
+  const { course } = req.body;
+  const userId = req.user.id
+
+    stripePayment (course,res,userId)
+  })
+export const purchaseSuccess = catchAsync(async(req,res,next)=>{
+      getEvent(req,res)
+})
+

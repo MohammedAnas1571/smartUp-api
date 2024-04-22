@@ -119,5 +119,13 @@ export const updateProfile =  catchAsync(async (req,res,next)=>{
     { $set: { username, email, profilePhoto:imgUrl,profession,about } },
     { new: true } 
   )
-  res.status(200).json("Profile Updated")
+  const responseData = {
+    username: updatedUser.username,
+    email: updatedUser.email,
+    profilePhoto: updatedUser.profilePhoto,
+    profession: updatedUser.profession,
+    about: updatedUser.about
+  };
+  
+  res.status(200).json(responseData)
 })
