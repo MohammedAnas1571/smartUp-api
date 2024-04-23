@@ -2,7 +2,7 @@ import express from "express"
 import {signUpValidator,signvalidation} from "../middleware/validation.js"
 import { userSignUp,userSignIn,otpValidation,emailVerification,resetPassword,signOut } from "../controller/userAuthController.js"
 import {passportController} from "../utils/passport.js"
-import {getCourses,aboutCourse,purchaseCoures,purchaseSuccess} from '../controller/courseController.js'
+import {getCourses,aboutCourse,purchaseCoures,purchaseSuccess,getModuleList} from '../controller/courseController.js'
 import { cloudflare } from "../middleware/CloudFire.js"
 import {verifyToken}from  '../middleware/isAuth.js';
  const router = express.Router()
@@ -17,6 +17,7 @@ import {verifyToken}from  '../middleware/isAuth.js';
   router.get("/getDetails/:id",aboutCourse)
   router.post('/payment',verifyToken,purchaseCoures)
   router.post('/webhook', express.raw({type: 'application/json'}),purchaseSuccess)
+  router.get( "/modules/:id", verifyToken,getModuleList )
   router.get('/googleAuth',
   passportController.authenticate('google', { scope: ['profile','email'] }));
 

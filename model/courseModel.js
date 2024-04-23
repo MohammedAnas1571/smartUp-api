@@ -25,6 +25,7 @@ const courseSchema = new Schema(
       type: Boolean,
       default: false,
     },
+  
     image: { type: String, required: true },
    
   },
