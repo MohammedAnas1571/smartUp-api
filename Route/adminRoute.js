@@ -9,4 +9,5 @@ router.get("/catagory",getCatagory)
 router.post("/catagory",addCatagory)
 
 
+
 export default router

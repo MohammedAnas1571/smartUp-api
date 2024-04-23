@@ -112,7 +112,7 @@ export const updateProfile =  catchAsync(async (req,res,next)=>{
     const oldPhotoPath = path.join(__dirname, '../../', tutor.profilePhoto);
     fs.unlinkSync(oldPhotoPath);
   }
-  const  imgUrl= req.file.path
+  const  imgUrl= req.file?.path  
    
   const updatedUser = await Tutor.findByIdAndUpdate(
     userId,

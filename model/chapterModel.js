@@ -3,9 +3,12 @@ import {model,Schema} from "mongoose"
 
 
 const chapterSchema = new Schema ({
-    modules:{
+    name:{
         type:String,
         required:true
+    },
+    courseId:{
+        type:Schema.Types.ObjectId,ref:"Course",required:true
     },
     order: {
         type: Number,

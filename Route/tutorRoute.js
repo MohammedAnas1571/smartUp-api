@@ -4,7 +4,7 @@ import path from 'path'
 import {signUpValidator,signvalidation,courseValidation} from "../middleware/validation.js"
 import{verifyToken}from'../middleware/isAuth.js'
 import { tutorSignUp,tutorSignIn,emailVerification,resetPassword,getProfile,updateProfile } from "../controller/tutorController.js"
-import {  courseUpload,myCourses,addingModule } from '../controller/courseController.js';
+import {  courseUpload,myCourses,addingModule ,publishCourse } from '../controller/courseController.js';
  const router = express.Router()
  const profileMulter = multer({
   storage: multer.diskStorage({
@@ -26,8 +26,9 @@ const s3Multer = multer();
  router.post("/change_Password/:id/:token",resetPassword)
  router.get("/profile",verifyToken,getProfile)
  router.put("/profile",verifyToken,profileMulter.single("image"),updateProfile)
-  router.post("/course",verifyToken, s3Multer.fields([{ name: 'preview', maxCount: 1 }, { name: 'image', maxCount: 1 }]),courseValidation,courseUpload)
+  router.post("/course",verifyToken, s3Multer.fields([{ name: 'preview', maxCount: 1 }, { name: 'image', maxCount: 1 }]),courseUpload)
   router.post("/addModule",verifyToken,s3Multer.single("video"),addingModule)
+  router.put("/publishCourse",verifyToken,publishCourse)
  
   router.get("/myCourses/",verifyToken,myCourses)
 

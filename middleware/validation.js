@@ -60,9 +60,9 @@ export const courseValidation = (req, res, next) => {
             'string.min': 'Minimum 4 characters are required for the subtitle.',
             'any.required': 'Subtitle is required.',
         }),
-        catagory: Joi.string().required().messages({
-            'any.required': 'Category is required.',
-        }),
+        // catagory: Joi.string().required().messages({
+        //     'any.required': 'Category is required.',
+        // }),
         tags: Joi.string().required().messages({
             'any.required': 'Tags is required.',
         }),

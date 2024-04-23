@@ -5,6 +5,7 @@ import crypto from "crypto";
 import Course from "../model/courseModel.js";
 import Chapters from "../model/chapterModel.js"
 import { stripePayment,getEvent } from "../utils/stripe.js";
+import User from "../model/userModel.js";
 
 
 export const courseUpload = catchAsync(async (req, res, next) => {
@@ -24,7 +25,7 @@ export const courseUpload = catchAsync(async (req, res, next) => {
    const fileName = await imageStore(req.files.image[0], imageName);
    const videoName = crypto.createHash("md5").update(req.files.preview[0].buffer).digest("hex") + ".mp4";
 const videoFileName = await videoStore(req.files.preview[0], videoName);
-
+ console.log("dkjfhsidkfjs")
        await Course.create({
     tutorId: req.user.id,
     title,
@@ -65,14 +66,26 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
   }
 });
 
+export const publishCourse = catchAsync(async(req,res,next)=>{
+  const {id} = req.body
+  console.log(id)
+  const publishedCourse=await Course.findById(id)
+  if(publishedCourse.modules.length ===0){
+    return next(new CustomError("Please Add Atleast One Module",400))
+  }else{
+    await Course.findByIdAndUpdate(id ,{isPublish : true})
+    res.status(200).json({message:"The course has been published" })
+  }
+})
+
 
 export const myCourses = catchAsync(async (req, res, next) => {
   const courses = await Course.find({ tutorId: req.user.id })
-    .select("image status title updatedAt")
+    .select("image title updatedAt price isPublish")
     .exec();
 
   if (!courses || courses.length === 0) {
-    return next(new CustomError("User is not found. Please register.", 401));
+    return next(new CustomError("Courses is Not Found Please Add Course", 401));
   }
 
   res.status(200).json({ courses });
@@ -85,9 +98,8 @@ export const addingModule = catchAsync(async(req,res,next)=>{
   const videoFileName = await videoStore(req.file.buffer, videoName);
   console.log("dofihsdfnisdk")
   const chapters =  await Chapters.create({
-    modules,order,videoUrl : videoFileName
+    name:modules,order,videoUrl : videoFileName,courseId: id
   })
-    await  Course.findByIdAndUpdate(id,{ $push:{modules:chapters._id}},{new:true})
   res.status(201).json("Added new chapter")
 })
 
@@ -100,4 +112,14 @@ export const purchaseCoures = catchAsync(async(req,res,next)=>{
 export const purchaseSuccess = catchAsync(async(req,res,next)=>{
       getEvent(req,res)
 })
+
+// export const getModuleList =  catchAsync(async(req,res,next)=>{
+//   const {id} = req.body
+//   const user = await User.findOne({ _id: req.user.id });
+//   if (!user.purchasedCourses.includes(id)) {
+//     return res.status(403).json({ message: 'You have not purchased this course.' });
+//   }
+  
+
+// })
 
