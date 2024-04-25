@@ -29,30 +29,24 @@ export const userSignUp = catchAsync(async (req, res, next) => {
 });
 
 export const userSignIn = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password: newPassword } = req.body;
   const user = await User.findOne({ email });
   if (!user)
     return next(new CustomError("User is not Found please register", 401));
-  const isValid = bcrypt.compareSync(password, user.password);
+  const isValid = bcrypt.compareSync(newPassword, user.password);
 
   if (!isValid) return next(new CustomError("Invalid Password!", 401));
 
   const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
     expiresIn: "7d",
   });
-  const rest = {
-    email: user._doc.email,
-    id: user._doc._id,
-    username: user._doc.username,
-    role: user._doc.role,
-    profilePhoto: user._doc.profilePhoto,
-    isVerified: user._doc.isVerified,
-  };
+
+  const { password, ...rest } = user._doc;
   res
     .cookie("access_token", token, {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/",
+      httpOnly: true,
     })
     .status(200)
     .json({ user: rest });
@@ -86,19 +80,12 @@ export const otpValidation = catchAsync(async (req, res, next) => {
   const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
     expiresIn: "7d",
   });
-  const rest = {
-    email: user._doc.email,
-    id: user._doc._id,
-    username: user._doc.username,
-    role: user._doc.role,
-    profilePhoto: user._doc.profilePhoto,
-    isVerified: user._doc.isVerified,
-  };
 
+  const { password, ...rest } = user._doc;
   res.cookie("access_token", token, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
+    httpOnly: true,
   });
 
   return res
@@ -132,15 +119,13 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   });
 });
 
-export const googleAuth =  function(accessToken, refreshToken, profile, cb) {
-  try{
-
-    console.log(profile)
+export const googleAuth = function (accessToken, refreshToken, profile, cb) {
+  try {
+    console.log(profile);
+  } catch (err) {
+    return cb(err, null);
   }
-catch(err){
-  return cb(err,null)
-}
-}
+};
 
 export const signOut = catchAsync(async (req, res, next) => {
   res.clearCookie("access_token").json("cookie cleared");

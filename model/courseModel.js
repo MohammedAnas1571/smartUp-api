@@ -9,7 +9,7 @@ const courseSchema = new Schema(
       type: mongoose.Types.ObjectId,
       ref: "Catagory",
       required: true,
-    }, 
+    },
     tags: { type: String, required: true },
     level: { type: String, required: true },
     price: { type: Number, required: true },
@@ -25,9 +25,8 @@ const courseSchema = new Schema(
       type: Boolean,
       default: false,
     },
-  
+
     image: { type: String, required: true },
-   
   },
   { timestamps: true }
 );

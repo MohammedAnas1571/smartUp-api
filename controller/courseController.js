@@ -59,6 +59,7 @@ export const getCourses = catchAsync(async (req, res, next) => {
 export const aboutCourse = catchAsync(async (req, res, next) => {
   const course = await Course.findById(req.params.id)
     .populate({ path: "tutorId", select: "profilePhoto username" })
+    .populate({ path: "catagory", select: "name" })
     .exec();
 
   if (!course) {
