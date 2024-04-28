@@ -1,8 +1,4 @@
-import {
-  S3Client,
-  PutObjectCommand,
-
-} from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import "dotenv/config";
 import sharp from "sharp";
@@ -21,31 +17,42 @@ const s3 = new S3Client({
 });
 
 export const imageStore = async (file, imageName) => {
-    const buffer = await sharp(file.buffer)
+  const image = sharp(file.buffer);
+  const metadata = await image.metadata();
+  let buffer;
+  if (metadata.format === "jpeg") {
+    buffer = await image
       .resize({ height: 500, width: 500, fit: "contain" })
+      .jpeg({ quality: 50, progressive: true })
       .toBuffer();
-      const command = new PutObjectCommand({
-        Bucket: bucket,
-        Key: imageName,
-        Body:buffer,
-        ContentType: file.mimetype 
-    })
-    const fileLink = `https://${bucket}.s3.${region}.amazonaws.com/${imageName}`
-     await s3.send(command)
-    return   fileLink 
-}
+  }
+  if (metadata.format === "png") {
+    buffer = await image
+      .resize({ height: 500, width: 500, fit: "contain" })
+      .png({ progressive: true })
+      .toBuffer();
+  }
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: imageName,
+    Body: buffer,
+    ContentType: file.mimetype,
+  });
+  const fileLink = `https://${bucket}.s3.${region}.amazonaws.com/${imageName}`;
+  await s3.send(command);
+  return fileLink;
+};
 export const videoStore = async (file, videoName) => {
   const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: videoName,
-      Body: file.buffer,
-      ContentType: file.mimetype 
+    Bucket: bucket,
+    Key: videoName,
+    Body: file.buffer,
+    ContentType: file.mimetype,
   });
 
   const videoLink = `https://${bucket}.s3.${region}.amazonaws.com/${videoName}`;
 
   await s3.send(command);
-  
-  return videoLink;
-}
 
+  return videoLink;
+};

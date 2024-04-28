@@ -5,6 +5,7 @@ import { CustomError } from "../utils/customError.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import jwt from "jsonwebtoken";
 import path from "path";
+import OTP from "../model/otpModel.js";
 
 export const tutorSignUp = catchAsync(async (req, res, next) => {
   const { username, email, password: newPassword } = req.body;
@@ -64,6 +65,7 @@ export const emailVerification = catchAsync(async (req, res, next) => {
   await sendEmail(user, token);
   res.status(200).json("Please Click The Link That Sent To Your Mail");
 });
+
 export const resetPassword = catchAsync(async (req, res, next) => {
   const { token, id } = req.params;
   const { password } = req.body;
@@ -78,50 +80,54 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getProfile = catchAsync(async (req, res, next) => {
-  const id = req.user.id;
-  if (!id) {
-    return next(new CustomError("Not authorized to perform this action", 401));
-  }
-  const tutor = await Tutor.findById(id);
-
-  const { username, email, profession, about, profilePhoto } = tutor._doc;
-
-  let responseData = { username, email, profilePhoto };
-
-  if (profession !== undefined) {
-    responseData.profession = profession;
-  }
-
-  if (about !== undefined) {
-    responseData.about = about;
-  }
-
-  res.status(200).json(responseData);
-});
-
 export const updateProfile = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
   const { username, email, profession, about } = req.body;
   const tutor = await Tutor.findById(userId);
-  if (tutor && tutor.profilePhoto && tutor.profilePhoto.startsWith("public/")) {
-    const oldPhotoPath = path.join(__dirname, "../../", tutor.profilePhoto);
-    fs.unlinkSync(oldPhotoPath);
-  }
+  // if (tutor && tutor.profilePhoto && tutor.profilePhoto.startsWith("public/")) {
+  //   const oldPhotoPath = path.join(__dirname, "../../", tutor.profilePhoto);
+  //   fs.unlinkSync(oldPhotoPath);
+  // }
   const imgUrl = req.file?.path;
 
   const updatedUser = await Tutor.findByIdAndUpdate(
     userId,
-    { $set: { username, email, profilePhoto: imgUrl, profession, about } },
+    { $set: { username, profilePhoto: imgUrl, profession, about } },
     { new: true }
   );
-  const responseData = {
-    username: updatedUser.username,
-    email: updatedUser.email,
-    profilePhoto: updatedUser.profilePhoto,
-    profession: updatedUser.profession,
-    about: updatedUser.about,
-  };
 
-  res.status(200).json(responseData);
+  res.status(200).json(updatedUser);
+});
+
+export const changeEmail = catchAsync(async (req, res, next) => {
+  let id = req.user.id;
+  const tutor = await Tutor.findById(id);
+
+  await sendEmail(tutor);
+  res.status(200).json("lfkhgidfkn");
+});
+
+export const otpVerification = catchAsync(async (req, res, next) => {
+  const { otp, email } = req.body;
+  console.log(email);
+  const id = req.user.id;
+  const validOtp = await OTP.findOne({ userId: id });
+
+  if (!validOtp) return next(new CustomError("No Valid Otp Found", 404));
+
+  const isMatch = await bcrypt.compare(otp, validOtp.otp);
+
+  if (!isMatch)
+    return next(new CustomError("Otp is Not Match! Try Again ", 401));
+
+  const tutor = await Tutor.findByIdAndUpdate(validOtp.userId, {
+    $set: { email: email },
+  });
+
+  console.log(tutor);
+
+  await OTP.deleteOne({ userId: id });
+  return res
+    .status(200)
+    .json({ tutor, message: "Email Verification Successful" });
 });

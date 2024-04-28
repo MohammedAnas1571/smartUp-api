@@ -83,11 +83,25 @@ export const publishCourse = catchAsync(async (req, res, next) => {
 });
 
 export const myCourses = catchAsync(async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 8;
+  const skip = (page - 1) * pageSize;
   const courses = await Course.find({ tutorId: req.user.id })
+    .skip(skip)
+    .limit(pageSize)
     .select("image title updatedAt price isPublish")
     .exec();
 
-  res.status(200).json({ courses });
+  const totalCount = await Course.countDocuments({ tutorId: req.user.id });
+  const pageCount = Math.ceil(totalCount / pageSize);
+
+  const pagination = {
+    currentPage: page,
+    pageSize,
+    totalCount,
+    pageCount,
+  };
+  res.status(200).json({ courses, pagination });
 });
 
 export const addingModule = catchAsync(async (req, res, next) => {

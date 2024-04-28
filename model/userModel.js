@@ -1,39 +1,43 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     username: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     email: {
-        type: String,
-        required: true,
-        unique:true
+      type: String,
+      required: true,
+      unique: true,
     },
-    role:{
-        type:String,
-        default: 'User'
+    role: {
+      type: String,
+      default: "User",
     },
-   
-    password: {
-        type: String,
-        required: true
+    about: {
+      type: String,
     },
-    isBlocked:{
-        type:Boolean,
-        default:false
 
+    password: {
+      type: String,
+      required: true,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
     isVerified: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     profilePhoto: {
-        type: String,
-        default: "https://www.pngitem.com/pimgs/m/22-223968_default-profile-picture-circle-hd-png-download.png"
+      type: String,
+      default: "public/userprofile.png",
     },
-   
-},{ timestamps: true });
+  },
+  { timestamps: true }
+);
 
 const User = mongoose.model("User", userSchema);
 

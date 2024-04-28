@@ -60,7 +60,8 @@ export const otpValidation = catchAsync(async (req, res, next) => {
 
   const isMatch = await bcrypt.compare(otp, validOtp.otp);
 
-  if (!isMatch) return next(new CustomError("Invalid Token ", 401));
+  if (!isMatch)
+    return next(new CustomError("Otp is Not Match! Try Again ", 401));
 
   let user;
   if (role === "User") {
@@ -111,7 +112,7 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   console.log(password);
   console.log(12552);
   jwt.verify(token, process.env.SECRET, async (err) => {
-    if (err) return next(new CustomError("Invalid token", 401));
+    if (err) return next(new CustomError("Invalid Otp", 401));
 
     const hashedPassword = bcrypt.hashSync(password, 10);
     await User.findByIdAndUpdate(id, { password: hashedPassword });
@@ -126,6 +127,32 @@ export const googleAuth = function (accessToken, refreshToken, profile, cb) {
     return cb(err, null);
   }
 };
+
+export const changeProfile = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const { username, about } = req.body;
+  const user = await User.findById(userId);
+  if (user && user.profilePhoto && user.profilePhoto.startsWith("public/")) {
+    const oldPhotoPath = path.join(__dirname, "../../", user.profilePhoto);
+    fs.unlinkSync(oldPhotoPath);
+  }
+  const imgUrl = req.file?.path;
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: { username, email, profilePhoto: imgUrl, about } },
+    { new: true }
+  );
+  const responseData = {
+    username: updatedUser.username,
+
+    profilePhoto: updatedUser.profilePhoto,
+
+    about: updatedUser.about,
+  };
+
+  res.status(200).json(responseData);
+});
 
 export const signOut = catchAsync(async (req, res, next) => {
   res.clearCookie("access_token").json("cookie cleared");
