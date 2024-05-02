@@ -85,7 +85,7 @@ export const courseValidation = (req, res, next) => {
     
     const fileSchema = Joi.object({
         
-        mimetype: Joi.string().valid('image/jpeg', 'image/png', 'image/gif,video/mp4').required().messages({
+        mimetype: Joi.string().valid('image/jpeg', 'image/png','video/mp4').required().messages({
             'any.only': 'Invalid mimetype. Only JPEG, PNG,GIF and mp4 are allowed.',
             'any.required': 'Mimetype is required.',
         }),

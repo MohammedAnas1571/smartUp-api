@@ -22,13 +22,13 @@ export const imageStore = async (file, imageName) => {
   let buffer;
   if (metadata.format === "jpeg") {
     buffer = await image
-      .resize({ height: 500, width: 500, fit: "contain" })
-      .jpeg({ quality: 50, progressive: true })
+      .resize({ height: 580, width: 924, })
+      .jpeg({ quality: 80, progressive: true })
       .toBuffer();
   }
   if (metadata.format === "png") {
     buffer = await image
-      .resize({ height: 500, width: 500, fit: "contain" })
+      .resize({ height: 580, width: 924,  })
       .png({ progressive: true })
       .toBuffer();
   }

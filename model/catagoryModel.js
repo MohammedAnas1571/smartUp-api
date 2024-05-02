@@ -5,6 +5,10 @@ const catagorySchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    activeStatus:{
+        type:Boolean,
+        default:true
+    }
 })
 
 const catagory = mongoose.model("Catagory", catagorySchema);

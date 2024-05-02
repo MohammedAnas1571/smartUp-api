@@ -8,7 +8,7 @@ import {
   resetPassword,
   signOut,
   changeProfile,
-} from "../controller/userAuthController.js";
+} from "../controller/userController.js";
 import { profileMulter } from "../utils/multer.js";
 import { passportController } from "../utils/passport.js";
 import {
@@ -30,8 +30,8 @@ router.post("/change_Password/:id/:token", resetPassword);
 router.get("/logout", signOut);
 router.get("/course", getCourses);
 router.get("/getDetails/:id", aboutCourse);
-router.post(
-  "profile",
+router.put(
+  "/profile",
   verifyToken,
   profileMulter.single("image"),
   changeProfile

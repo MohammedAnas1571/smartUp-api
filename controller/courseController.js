@@ -58,22 +58,27 @@ export const getCourses = catchAsync(async (req, res, next) => {
 
 export const aboutCourse = catchAsync(async (req, res, next) => {
   const course = await Course.findById(req.params.id)
-    .populate({ path: "tutorId", select: "profilePhoto username" })
+    .populate({
+      path: "tutorId",
+      select: "profilePhoto username about profession",
+    })
     .populate({ path: "catagory", select: "name" })
     .exec();
-
   if (!course) {
     return next(new CustomError("User is not found. Please register.", 401));
   } else {
-    res.status(200).json({ course });
+    const chapters = await Chapters.find(
+      { courseId: req.params.id },
+      { name: 1, _id: 0 }
+    );
+
+    res.status(200).json({ course, chapters });
   }
 });
 
 export const publishCourse = catchAsync(async (req, res, next) => {
   const { id } = req.body;
-  console.log(id);
   const isChapters = await Chapters.find({ courseId: id });
-  console.log(isChapters);
   if (isChapters.length < 1) {
     return next(new CustomError("Please Add Atleast One Module", 400));
   } else {
@@ -117,8 +122,9 @@ export const addingModule = catchAsync(async (req, res, next) => {
     videoUrl: videoFileName,
     courseId: id,
   });
-
-  res.status(201).json("Added new chapter");
+  const { name } = chapters;
+  console.log(name);
+  res.status(201).json({ chapterName: name });
 });
 
 export const purchaseCoures = catchAsync(async (req, res, next) => {
@@ -143,3 +149,4 @@ export const getModuleList = catchAsync(async (req, res, next) => {
     res.status(200).json({ chapters });
   }
 });
+
