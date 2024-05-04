@@ -34,17 +34,36 @@ export const adminLogin = catchAsync(async (req, res, next) => {
 });
 
 export const getUser = catchAsync(async (req, res, next) => {
-  const user = await User.find({});
+  console.log(req.query.page)
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 3;
+  const skip = (page - 1) * pageSize;
+
+  
+  const user = await User.find({}) .skip(skip)
+  .limit(pageSize)
+  .exec();
+  const totalCount = await User.countDocuments({});
+  const pageCount = Math.ceil(totalCount / pageSize);
   res.status(200).json({
-    status: "success",
+    pageCount,
     user,
   });
 });
 
 export const getTutor = catchAsync(async (req, res, next) => {
-  const user = await Tutor.find({});
+  
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 2;
+  const skip = (page - 1) * pageSize;
+
+  const user = await Tutor.find({}).skip(skip)
+  .limit(pageSize)
+  .exec();
+  const totalCount = await Tutor.countDocuments();
+  const pageCount = Math.ceil(totalCount / pageSize);
   res.status(200).json({
-    status: "success",
+    pageCount,
     user,
   });
 });
@@ -88,16 +107,22 @@ export const addCatagory = catchAsync(async (req, res, next) => {
   res.status(200).json("Catagory is Created");
 });
 export const getCatagory = catchAsync(async (req, res, next) => {
-  const catagories = await Catagory.find({ activeStatus: true });
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 1;
+  const skip = (page - 1) * pageSize;
+  const catagories = await Catagory.find({ activeStatus: true }).skip(skip)
+  .limit(pageSize)
+  .exec();
+  const totalCount = await Catagory.countDocuments();
+  const pageCount = Math.ceil(totalCount / pageSize);
   res.status(200).json({
-    status: "success",
+    pageCount,
     catagories,
   });
 });
 
 export const editCatagory = catchAsync(async (req, res, next) => {
   const { id, catagory } = req.body;
-
   const uniqueCatagory = catagory.toLowerCase();
   console.log(uniqueCatagory);
   const categoryExist = await Catagory.findOne({ name: uniqueCatagory });
@@ -160,7 +185,7 @@ export const createSubscriptions = catchAsync(async (req, res, next) => {
   });
 });
 
-export const  getSubscription = catchAsync(async(req,res,nex)=>{
+export const  getSubscription = catchAsync(async(req,res,next)=>{
   const subscription =  await Subscription.find()
   res.status(200).json(subscription)
 

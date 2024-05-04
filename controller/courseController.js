@@ -101,11 +101,9 @@ export const myCourses = catchAsync(async (req, res, next) => {
   const pageCount = Math.ceil(totalCount / pageSize);
 
   const pagination = {
-    currentPage: page,
-    pageSize,
-    totalCount,
     pageCount,
   };
+ 
   res.status(200).json({ courses, pagination });
 });
 
