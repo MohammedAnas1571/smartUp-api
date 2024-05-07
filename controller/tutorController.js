@@ -6,6 +6,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 import jwt from "jsonwebtoken";
 import path from "path";
 import OTP from "../model/otpModel.js";
+import { stripePayment } from "../utils/stripe.js";
 
 export const tutorSignUp = catchAsync(async (req, res, next) => {
   const { username, email, password: newPassword } = req.body;
@@ -102,9 +103,8 @@ export const updateProfile = catchAsync(async (req, res, next) => {
 export const changeEmail = catchAsync(async (req, res, next) => {
   let id = req.user.id;
   const tutor = await Tutor.findById(id);
-
   await sendEmail(tutor);
-  res.status(200).json("lfkhgidfkn");
+  res.status(200).json("Email is send successfully");
 });
 
 export const otpVerification = catchAsync(async (req, res, next) => {
@@ -120,14 +120,18 @@ export const otpVerification = catchAsync(async (req, res, next) => {
   if (!isMatch)
     return next(new CustomError("Otp is Not Match! Try Again ", 401));
 
-  const tutor = await Tutor.findByIdAndUpdate(validOtp.userId, {
+  await Tutor.findByIdAndUpdate(validOtp.userId, {
     $set: { email: email },
   });
-
-  console.log(tutor);
-
+  const tutor = await Tutor.findById(id);
   await OTP.deleteOne({ userId: id });
   return res
     .status(200)
     .json({ tutor, message: "Email Verification Successful" });
 });
+
+export const peymentForSubscription = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  stripePayment(req.body.subscription, res, userId);
+});
+

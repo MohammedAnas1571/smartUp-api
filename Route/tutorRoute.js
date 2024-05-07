@@ -14,12 +14,15 @@ import {
   updateProfile,
   changeEmail,
   otpVerification,
+  peymentForSubscription,
 } from "../controller/tutorController.js";
 import {
   courseUpload,
   myCourses,
   addingModule,
   publishCourse,
+  getCatagory,deleteChapter,
+  subscriptionPlan
 } from "../controller/courseController.js";
 const router = express.Router();
 
@@ -46,9 +49,14 @@ router.post(
 );
 router.post("/addModule", verifyToken, s3Multer.single("video"), addingModule);
 router.put("/publishCourse", verifyToken, publishCourse);
+router.get("/catagory",verifyToken,getCatagory)
 
 router.get("/myCourses", verifyToken, myCourses);
 router.post("/change-email", verifyToken, changeEmail);
 router.post("/verifyotp", verifyToken, otpVerification);
+router.delete("/deleteChapter/:id",verifyToken,deleteChapter)
+router.get("/subscription",verifyToken,subscriptionPlan)
+router.post("/payment",verifyToken,peymentForSubscription)
+
 
 export default router;

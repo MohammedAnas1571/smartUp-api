@@ -108,7 +108,7 @@ export const addCatagory = catchAsync(async (req, res, next) => {
 });
 export const getCatagory = catchAsync(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 1;
+  const pageSize = 10;
   const skip = (page - 1) * pageSize;
   const catagories = await Catagory.find({ activeStatus: true }).skip(skip)
   .limit(pageSize)

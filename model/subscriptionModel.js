@@ -20,7 +20,7 @@ const subscriptionSchema = new mongoose.Schema({
     billingPeriod: {
         type: String,
         required:true,
-        enum: ['week','month','year']
+        enum: ['week','month']
     }
 })
 

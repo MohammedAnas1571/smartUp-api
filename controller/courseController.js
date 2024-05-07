@@ -6,6 +6,11 @@ import Course from "../model/courseModel.js";
 import Chapters from "../model/chapterModel.js";
 import { stripePayment, getEvent } from "../utils/stripe.js";
 import Purchase from "../model/PurchaseModel.js";
+import Catagory from "../model/catagoryModel.js";
+import { uploadQueue } from "../utils/uploadingWithQueue.js";
+import {Subscription} from "../model/subscriptionModel.js"
+import jwt from "jsonwebtoken"
+
 
 export const courseUpload = catchAsync(async (req, res, next) => {
   const {
@@ -19,31 +24,63 @@ export const courseUpload = catchAsync(async (req, res, next) => {
     content,
   } = req.body;
 
-  const imageName = crypto
-    .createHash("md5")
-    .update(req.files.image[0].buffer)
-    .digest("hex");
-  const fileName = await imageStore(req.files.image[0], imageName);
-  const videoName =
-    crypto.createHash("md5").update(req.files.preview[0].buffer).digest("hex") +
-    ".mp4";
-  const videoFileName = await videoStore(req.files.preview[0], videoName);
-  console.log("dkjfhsidkfjs");
-  await Course.create({
-    tutorId: req.user.id,
-    title,
-    subTitle,
-    catagory,
-    level,
-    tags,
-    price,
-    description,
-    content,
-    image: fileName,
-    preview: videoFileName,
+  const uploadImageTask = async () => {
+    const imageName = crypto
+      .createHash("md5")
+      .update(req.files.image[0].buffer)
+      .digest("hex");
+    const fileName = await imageStore(req.files.image[0], imageName);
+    return fileName;
+  };
+
+  const uploadPreviewTask = async () => {
+    const videoName =
+      crypto.createHash("md5").update(req.files.preview[0].buffer).digest("hex") +
+      ".mp4";
+    const videoFileName = await videoStore(req.files.preview[0], videoName);
+    return videoFileName;
+  };
+
+  const uploadTask = async () => {
+    const fileName = await uploadImageTask();
+    const videoFileName = await uploadPreviewTask();
+    const course = await Course.create({
+      tutorId: req.user.id,
+      title,
+      subTitle,
+      catagory,
+      level,
+      tags,
+      price,
+      description,
+      content,
+      image: fileName,
+      preview: videoFileName,
+    });
+    return course; 
+  };
+
+   await new Promise((resolve, reject) => {
+    const numTasks = 1; 
+    let completedTasks = 0;
+
+    const onComplete = () => {
+      completedTasks++;
+      if (completedTasks === numTasks) {
+        resolve();
+      }
+    };
+
+    uploadQueue.onComplete(onComplete);
+
+    uploadQueue.enqueue(uploadTask);
   });
-  return res.status(201).json("courses are  uploaded");
+
+  return res.status(201).json("Courses are uploaded ");
 });
+
+
+
 
 export const getCourses = catchAsync(async (req, res, next) => {
   const courses = await Course.find()
@@ -57,6 +94,21 @@ export const getCourses = catchAsync(async (req, res, next) => {
 });
 
 export const aboutCourse = catchAsync(async (req, res, next) => {
+  let isPurchased = false; 
+  if (req.cookies.access_token) {
+    const token = req.cookies.access_token;
+    const user = jwt.verify(token, process.env.TOKEN);
+    req.user = user;
+    const purchase = await Purchase.findOne({
+      userId: req.user.id,
+      courseId: req.params.id
+    });
+
+    if (purchase) {
+      isPurchased = true; 
+    }
+  }
+
   const course = await Course.findById(req.params.id)
     .populate({
       path: "tutorId",
@@ -64,17 +116,19 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
     })
     .populate({ path: "catagory", select: "name" })
     .exec();
+
   if (!course) {
-    return next(new CustomError("User is not found. Please register.", 401));
+    return next(new CustomError("Course is not found.", 401));
   } else {
     const chapters = await Chapters.find(
       { courseId: req.params.id },
-      { name: 1, _id: 0 }
-    );
+      { name: 1, _id: 1 }
+    ).sort({ order: 1 });
 
-    res.status(200).json({ course, chapters });
+    res.status(200).json({ course, chapters, isPurchased });
   }
 });
+
 
 export const publishCourse = catchAsync(async (req, res, next) => {
   const { id } = req.body;
@@ -120,15 +174,14 @@ export const addingModule = catchAsync(async (req, res, next) => {
     videoUrl: videoFileName,
     courseId: id,
   });
-  const { name } = chapters;
-  console.log(name);
-  res.status(201).json({ chapterName: name });
+     
+  const remainingChapters = await Chapters.find({})
+  res.status(201).json({ remainingChapters });
 });
 
 export const purchaseCoures = catchAsync(async (req, res, next) => {
   const { course } = req.body;
   const userId = req.user.id;
-
   stripePayment(course, res, userId);
 });
 export const purchaseSuccess = catchAsync(async (req, res, next) => {
@@ -148,3 +201,23 @@ export const getModuleList = catchAsync(async (req, res, next) => {
   }
 });
 
+
+export const getCatagory = catchAsync(async(req,res,next)=>{
+  const categories = await Catagory.find();
+  res.status(200).json({categories})
+})
+
+export const deleteChapter =catchAsync(async(req,res,next)=>{
+
+    await Chapters.findByIdAndDelete(req.params.id)
+
+   const remainingChapters = await Chapters.find({})
+   
+   res.status(200).json({ remainingChapters, message: "Deleted Successfully" });
+})
+
+export  const subscriptionPlan = catchAsync(async(req,res,next)=>{
+
+  const subscriptions = await Subscription.find({})
+  res.status(200).json({subscriptions})
+})
