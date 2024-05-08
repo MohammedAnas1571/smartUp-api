@@ -1,5 +1,5 @@
 import express from  'express';
-import { getUser,blockUser, getTutor, addCatagory,getCatagory,adminLogin,editCatagory,deleteCatagory,getCourses,setApproval,blockInstructor,createSubscriptions,getSubscription } from '../controller/adminController.js';
+import { getUser,blockUser, getTutor, addCatagory,getCatagory,adminLogin,editCatagory,deleteCatagory,getCourses,setApproval,blockInstructor,createSubscriptions,getSubscription,deleteSubscription } from '../controller/adminController.js';
 import { verifyToken } from '../middleware/isAuth.js';
  const router = express.Router()
 
@@ -16,6 +16,7 @@ router.get("/getCourses",verifyToken,getCourses)
 router.put("/approval/:id/status",verifyToken,setApproval)
 router.get("/subscription",verifyToken,getSubscription)
 router.post("/subscription",verifyToken,createSubscriptions)
+router.delete("/subscription/:id",verifyToken,deleteSubscription)
 
 
 

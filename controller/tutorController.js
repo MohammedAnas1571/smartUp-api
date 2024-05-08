@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import OTP from "../model/otpModel.js";
 import { stripePayment } from "../utils/stripe.js";
+import { Subscribed } from "../model/subscibedModel.js";
 
 export const tutorSignUp = catchAsync(async (req, res, next) => {
   const { username, email, password: newPassword } = req.body;
@@ -134,4 +135,13 @@ export const peymentForSubscription = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
   stripePayment(req.body.subscription, res, userId);
 });
+
+ export const isSubscribed = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const isSubscribed = await Subscribed.findOne({userId})
+    if(!isSubscribed){
+      return next(new CustomError("Not subscribed yet ", 404));
+    }
+    res.status(200).json("success")
+  }) 
 

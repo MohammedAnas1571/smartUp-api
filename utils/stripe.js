@@ -62,8 +62,9 @@ const expiry = tenure.toString();
     ];
 
     paymentMode = "subscription";
-    successUrl = `${process.env.ORIGIN}/instructor/subscription-success/${product._id}`;
-    cancelUrl = `${process.env.ORIGIN}/payment/${product._id}`;
+    successUrl = `${process.env.ORIGIN}/instructor/subscription-success`;
+    cancelUrl = `${process.env.ORIGIN}/instructor/subscription`
+    
     metadataDetails = {
         userId: userId,
         subscription: product._id,
@@ -88,7 +89,7 @@ const expiry = tenure.toString();
     ];
     paymentMode = "payment";
     successUrl = `${process.env.ORIGIN}/success/${product._id}`;
-    cancelUrl = `${process.env.ORIGIN}/instructor/subscription`
+    cancelUrl = `${process.env.ORIGIN}/payment/${product._id}`;
       metadataDetails = {
       userId,
       courseId: product._id,

@@ -34,15 +34,12 @@ export const adminLogin = catchAsync(async (req, res, next) => {
 });
 
 export const getUser = catchAsync(async (req, res, next) => {
-  console.log(req.query.page)
+  console.log(req.query.page);
   const page = parseInt(req.query.page) || 1;
   const pageSize = 3;
   const skip = (page - 1) * pageSize;
 
-  
-  const user = await User.find({}) .skip(skip)
-  .limit(pageSize)
-  .exec();
+  const user = await User.find({}).skip(skip).limit(pageSize).exec();
   const totalCount = await User.countDocuments({});
   const pageCount = Math.ceil(totalCount / pageSize);
   res.status(200).json({
@@ -52,14 +49,11 @@ export const getUser = catchAsync(async (req, res, next) => {
 });
 
 export const getTutor = catchAsync(async (req, res, next) => {
-  
   const page = parseInt(req.query.page) || 1;
   const pageSize = 2;
   const skip = (page - 1) * pageSize;
 
-  const user = await Tutor.find({}).skip(skip)
-  .limit(pageSize)
-  .exec();
+  const user = await Tutor.find({}).skip(skip).limit(pageSize).exec();
   const totalCount = await Tutor.countDocuments();
   const pageCount = Math.ceil(totalCount / pageSize);
   res.status(200).json({
@@ -108,12 +102,14 @@ export const addCatagory = catchAsync(async (req, res, next) => {
 });
 export const getCatagory = catchAsync(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 10;
+  const pageSize = 4;
   const skip = (page - 1) * pageSize;
-  const catagories = await Catagory.find({ activeStatus: true }).skip(skip)
-  .limit(pageSize)
-  .exec();
-  const totalCount = await Catagory.countDocuments();
+  const catagories = await Catagory.find({ activeStatus: true })
+    .skip(skip)
+    .limit(pageSize)
+    .exec();
+    const totalCount = await Catagory.countDocuments({ activeStatus: true });
+
   const pageCount = Math.ceil(totalCount / pageSize);
   res.status(200).json({
     pageCount,
@@ -168,25 +164,29 @@ export const setApproval = catchAsync(async (req, res, next) => {
 });
 
 export const createSubscriptions = catchAsync(async (req, res, next) => {
-  const { planname, courseLimit, price, billingPeriod, description } = req.body;
+  const { planname, price, billingPeriod, description } = req.body;
   const newPlan = new Subscription({
     planName: planname,
-    courseLimit,
+
     billingPeriod,
     price,
     description,
   });
 
   await newPlan.save();
-
+  const subscription = await Subscription.find({})
   res.status(201).json({
     status: "Successfully created",
-    subscription: newPlan,
+    subscription,
   });
 });
 
-export const  getSubscription = catchAsync(async(req,res,next)=>{
-  const subscription =  await Subscription.find()
-  res.status(200).json(subscription)
-
-})
+export const getSubscription = catchAsync(async (req, res, next) => {
+  const subscription = await Subscription.find();
+  res.status(200).json(subscription);
+});
+export const deleteSubscription = catchAsync(async (req, res, next) => {
+  await Subscription.findByIdAndDelete(req.params.id);
+  const subscription = await Subscription.find({})
+  res.status(200).json(subscription);
+});

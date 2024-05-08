@@ -15,6 +15,7 @@ import {
   changeEmail,
   otpVerification,
   peymentForSubscription,
+  isSubscribed
 } from "../controller/tutorController.js";
 import {
   courseUpload,
@@ -24,6 +25,7 @@ import {
   getCatagory,deleteChapter,
   subscriptionPlan
 } from "../controller/courseController.js";
+
 const router = express.Router();
 
 router.post("/signUp", signUpValidator, tutorSignUp);
@@ -57,6 +59,7 @@ router.post("/verifyotp", verifyToken, otpVerification);
 router.delete("/deleteChapter/:id",verifyToken,deleteChapter)
 router.get("/subscription",verifyToken,subscriptionPlan)
 router.post("/payment",verifyToken,peymentForSubscription)
+router.get("/subscribed",verifyToken,isSubscribed)
 
 
 export default router;

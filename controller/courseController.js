@@ -8,9 +8,9 @@ import { stripePayment, getEvent } from "../utils/stripe.js";
 import Purchase from "../model/PurchaseModel.js";
 import Catagory from "../model/catagoryModel.js";
 import { uploadQueue } from "../utils/uploadingWithQueue.js";
-import {Subscription} from "../model/subscriptionModel.js"
-import jwt from "jsonwebtoken"
-
+import { Subscription } from "../model/subscriptionModel.js";
+import { Subscribed } from "../model/subscibedModel.js";
+import jwt from "jsonwebtoken";
 
 export const courseUpload = catchAsync(async (req, res, next) => {
   const {
@@ -35,8 +35,10 @@ export const courseUpload = catchAsync(async (req, res, next) => {
 
   const uploadPreviewTask = async () => {
     const videoName =
-      crypto.createHash("md5").update(req.files.preview[0].buffer).digest("hex") +
-      ".mp4";
+      crypto
+        .createHash("md5")
+        .update(req.files.preview[0].buffer)
+        .digest("hex") + ".mp4";
     const videoFileName = await videoStore(req.files.preview[0], videoName);
     return videoFileName;
   };
@@ -57,11 +59,11 @@ export const courseUpload = catchAsync(async (req, res, next) => {
       image: fileName,
       preview: videoFileName,
     });
-    return course; 
+    return course;
   };
 
-   await new Promise((resolve, reject) => {
-    const numTasks = 1; 
+  await new Promise((resolve, reject) => {
+    const numTasks = 1;
     let completedTasks = 0;
 
     const onComplete = () => {
@@ -79,11 +81,8 @@ export const courseUpload = catchAsync(async (req, res, next) => {
   return res.status(201).json("Courses are uploaded ");
 });
 
-
-
-
 export const getCourses = catchAsync(async (req, res, next) => {
-  const courses = await Course.find()
+  const courses = await Course.find({ status: "Approved" })
     .populate({
       path: "tutorId",
       select: "username  profilePhoto",
@@ -94,18 +93,18 @@ export const getCourses = catchAsync(async (req, res, next) => {
 });
 
 export const aboutCourse = catchAsync(async (req, res, next) => {
-  let isPurchased = false; 
+  let isPurchased = false;
   if (req.cookies.access_token) {
     const token = req.cookies.access_token;
     const user = jwt.verify(token, process.env.TOKEN);
     req.user = user;
     const purchase = await Purchase.findOne({
       userId: req.user.id,
-      courseId: req.params.id
+      courseId: req.params.id,
     });
 
     if (purchase) {
-      isPurchased = true; 
+      isPurchased = true;
     }
   }
 
@@ -129,7 +128,6 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
   }
 });
 
-
 export const publishCourse = catchAsync(async (req, res, next) => {
   const { id } = req.body;
   const isChapters = await Chapters.find({ courseId: id });
@@ -143,7 +141,7 @@ export const publishCourse = catchAsync(async (req, res, next) => {
 
 export const myCourses = catchAsync(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 8;
+  const pageSize = 4;
   const skip = (page - 1) * pageSize;
   const courses = await Course.find({ tutorId: req.user.id })
     .skip(skip)
@@ -157,7 +155,7 @@ export const myCourses = catchAsync(async (req, res, next) => {
   const pagination = {
     pageCount,
   };
- 
+
   res.status(200).json({ courses, pagination });
 });
 
@@ -174,8 +172,8 @@ export const addingModule = catchAsync(async (req, res, next) => {
     videoUrl: videoFileName,
     courseId: id,
   });
-     
-  const remainingChapters = await Chapters.find({})
+
+  const remainingChapters = await Chapters.find({ courseId: id });
   res.status(201).json({ remainingChapters });
 });
 
@@ -201,23 +199,33 @@ export const getModuleList = catchAsync(async (req, res, next) => {
   }
 });
 
+export const getCatagory = catchAsync(async (req, res, next) => {
+  const categories = await Catagory.find({ activeStatus: true });
+  res.status(200).json({ categories });
+});
 
-export const getCatagory = catchAsync(async(req,res,next)=>{
-  const categories = await Catagory.find();
-  res.status(200).json({categories})
-})
+export const deleteChapter = catchAsync(async (req, res, next) => {
+  await Chapters.findByIdAndDelete(req.params.id);
 
-export const deleteChapter =catchAsync(async(req,res,next)=>{
+  const remainingChapters = await Chapters.find({});
 
-    await Chapters.findByIdAndDelete(req.params.id)
+  res.status(200).json({ remainingChapters, message: "Deleted Successfully" });
+});
 
-   const remainingChapters = await Chapters.find({})
-   
-   res.status(200).json({ remainingChapters, message: "Deleted Successfully" });
-})
+export const subscriptionPlan = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const subscriptions = await Subscription.find({});
+  const subscribed = await Subscribed.findOne({ userId });
+  if (subscribed) {
+    const currentDate = new Date();
+    const expireDate = new Date(subscribed.expireAt);
+    if (currentDate <= expireDate) {
+      res.status(200).json({ subscriptions, subscribed });
+    } else {
+      return next(new CustomError("Date is Expired",403))
+    }
+  } 
+  res.status(200).json({ subscriptions });
+});
 
-export  const subscriptionPlan = catchAsync(async(req,res,next)=>{
 
-  const subscriptions = await Subscription.find({})
-  res.status(200).json({subscriptions})
-})
