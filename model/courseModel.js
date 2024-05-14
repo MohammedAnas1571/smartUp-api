@@ -1,5 +1,6 @@
 import mongoose, { Schema, model } from "mongoose";
 
+
 const courseSchema = new Schema(
   {
     tutorId: { type: mongoose.Types.ObjectId, required: true, ref: "Tutor" },
@@ -30,5 +31,9 @@ const courseSchema = new Schema(
   },
   { timestamps: true }
 );
+
+
+courseSchema.index({ title: 1, subTitle: 1, tags: 1
+ });
 const course = model("Course", courseSchema);
 export default course;

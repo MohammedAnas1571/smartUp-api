@@ -29,7 +29,7 @@ class UploadQueue {
     const nextUploadTask = this.queue.shift();
 
     try {
-      const course = await nextUploadTask(); // Wait for upload task to finish
+      const course = await nextUploadTask(); 
       console.log("Upload successful:", course);
     } catch (error) {
       console.error("Error uploading:", error);

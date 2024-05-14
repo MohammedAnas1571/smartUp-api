@@ -17,6 +17,9 @@ import {
   purchaseCoures,
   purchaseSuccess,
   getModuleList,
+  getSearch,
+  getNewCourses
+ 
 } from "../controller/courseController.js";
 import { cloudflare } from "../middleware/CloudFire.js";
 import { verifyToken } from "../middleware/isAuth.js";
@@ -28,8 +31,11 @@ router.post("/otp", otpValidation);
 router.post("/verification/", emailVerification);
 router.post("/change_Password/:id/:token", resetPassword);
 router.get("/logout", signOut);
-router.get("/course", getCourses);
+router.get("/courses", getCourses);
 router.get("/getDetails/:id", aboutCourse);
+router.get("/search",getSearch)
+router.get("/new-courses",getNewCourses)
+
 router.put(
   "/profile",
   verifyToken,

@@ -56,7 +56,7 @@ router.get("/catagory",verifyToken,getCatagory)
 router.get("/myCourses", verifyToken, myCourses);
 router.post("/change-email", verifyToken, changeEmail);
 router.post("/verifyotp", verifyToken, otpVerification);
-router.delete("/deleteChapter/:id",verifyToken,deleteChapter)
+router.delete("/deleteChapter/:id/:courseId",verifyToken,deleteChapter)
 router.get("/subscription",verifyToken,subscriptionPlan)
 router.post("/payment",verifyToken,peymentForSubscription)
 router.get("/subscribed",verifyToken,isSubscribed)

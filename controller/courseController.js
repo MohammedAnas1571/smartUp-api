@@ -11,6 +11,7 @@ import { uploadQueue } from "../utils/uploadingWithQueue.js";
 import { Subscription } from "../model/subscriptionModel.js";
 import { Subscribed } from "../model/subscibedModel.js";
 import jwt from "jsonwebtoken";
+import { timeStamp } from "console";
 
 export const courseUpload = catchAsync(async (req, res, next) => {
   const {
@@ -88,9 +89,11 @@ export const getCourses = catchAsync(async (req, res, next) => {
       select: "username  profilePhoto",
     })
     .exec();
-
-  res.status(200).json({ courses });
+   const categories = await Catagory.find({}).select("name")
+  res.status(200).json({ courses,categories });
 });
+
+
 
 export const aboutCourse = catchAsync(async (req, res, next) => {
   let isPurchased = false;
@@ -205,9 +208,10 @@ export const getCatagory = catchAsync(async (req, res, next) => {
 });
 
 export const deleteChapter = catchAsync(async (req, res, next) => {
+  
   await Chapters.findByIdAndDelete(req.params.id);
 
-  const remainingChapters = await Chapters.find({});
+  const remainingChapters = await Chapters.find({ courseId:req.params.courseId });
 
   res.status(200).json({ remainingChapters, message: "Deleted Successfully" });
 });
@@ -229,3 +233,30 @@ export const subscriptionPlan = catchAsync(async (req, res, next) => {
 });
 
 
+
+export const getSearch = catchAsync(async (req, res, next) => {
+  const searchText = req.query.searchText;
+
+  const results = await Course.find({
+        $or: [
+          { title: { $regex: searchText, $options: 'i' } }, 
+          { subtitle: { $regex: searchText, $options: 'i' } },
+          { tags: { $regex: searchText, $options: 'i' } },
+        
+        ]
+      
+    
+  });
+
+  if (!results.length) {
+    return next(new CustomError('No Search Result', 404));
+  }
+
+  res.status(200).json(results);
+});
+
+export const getNewCourses = catchAsync(async(req,res,next)=>{
+  const courses=await Course.find({status:"Approved"}).sort({timeStamp:1}).limit(6)
+  console.log(courses)
+  res.status(200).json(courses)
+})
