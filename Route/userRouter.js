@@ -18,7 +18,8 @@ import {
   purchaseSuccess,
   getModuleList,
   getSearch,
-  getNewCourses
+  getNewCourses,
+  addReviews
  
 } from "../controller/courseController.js";
 import { cloudflare } from "../middleware/CloudFire.js";
@@ -35,6 +36,7 @@ router.get("/courses", getCourses);
 router.get("/getDetails/:id", aboutCourse);
 router.get("/search",getSearch)
 router.get("/new-courses",getNewCourses)
+router.post("/review/:id",verifyToken,addReviews)
 
 router.put(
   "/profile",

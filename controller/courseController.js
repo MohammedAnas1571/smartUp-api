@@ -11,7 +11,7 @@ import { uploadQueue } from "../utils/uploadingWithQueue.js";
 import { Subscription } from "../model/subscriptionModel.js";
 import { Subscribed } from "../model/subscibedModel.js";
 import jwt from "jsonwebtoken";
-import { timeStamp } from "console";
+import Review from "../model/reviewModel.js"
 
 export const courseUpload = catchAsync(async (req, res, next) => {
   const {
@@ -110,7 +110,14 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
       isPurchased = true;
     }
   }
-
+  const reviews = await Review.find({courseId:req.params.id}).populate({path:"userId",select:"username profilePhoto"})
+  const totalReviews = reviews.length;
+   let totalRating = 0;
+    reviews.forEach(review => {
+    totalRating += review.rating;
+});
+const averageRating = totalRating / totalReviews;
+  
   const course = await Course.findById(req.params.id)
     .populate({
       path: "tutorId",
@@ -127,7 +134,7 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
       { name: 1, _id: 1 }
     ).sort({ order: 1 });
 
-    res.status(200).json({ course, chapters, isPurchased });
+    res.status(200).json({ course, chapters, isPurchased,reviews,averageRating });
   }
 });
 
@@ -168,8 +175,8 @@ export const addingModule = catchAsync(async (req, res, next) => {
   const videoName =
     crypto.createHash("md5").update(req.file.buffer).digest("hex") + ".mp4";
   const videoFileName = await videoStore(req.file.buffer, videoName);
-
-  const chapters = await Chapters.create({
+ 
+   await Chapters.create({
     name: modules,
     order,
     videoUrl: videoFileName,
@@ -192,13 +199,13 @@ export const purchaseSuccess = catchAsync(async (req, res, next) => {
 export const getModuleList = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const userId = req.user.id;
-  console.log(id, userId);
   const purchased = await Purchase.findOne({ userId, courseId: id });
+  const reviews = await Review.findOne({userId})
 
   if (purchased) {
     const chapters = await Chapters.find({ courseId: id }).sort({ order: 1 });
 
-    res.status(200).json({ chapters });
+    res.status(200).json({ chapters,reviews });
   }
 });
 
@@ -259,4 +266,22 @@ export const getNewCourses = catchAsync(async(req,res,next)=>{
   const courses=await Course.find({status:"Approved"}).sort({timeStamp:1}).limit(6)
   console.log(courses)
   res.status(200).json(courses)
+})
+
+export const addReviews = catchAsync(async(req,res,next)=>{
+  const userId = req.user.id
+   const{star,review} = req.body
+  let existingReview = await Review.findOne({userId})
+  
+  if(existingReview){
+    return next(new CustomError("You already reviewed",409))
+  }
+    const reviews =  await Review.create({
+         review,
+         rating:star,
+         userId:req.user.id,
+         courseId:req.params.id
+    
+  })
+  res.status(200).json(reviews)
 })
