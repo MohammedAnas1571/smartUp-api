@@ -25,14 +25,14 @@ if (product.billingPeriod === "week") {
    tenure = new Date(
        date.getFullYear(),
        date.getMonth(),
-       date.getDay() + 7
+       date.getDate() + 7
    );
 }
 if (product.billingPeriod === "month") {
    tenure = new Date(
        date.getFullYear(),
        date.getMonth() + 1,
-       date.getDay()
+       date.getDate()
    );
 }
 

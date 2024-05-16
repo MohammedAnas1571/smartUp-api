@@ -139,9 +139,14 @@ export const peymentForSubscription = catchAsync(async (req, res, next) => {
  export const isSubscribed = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
   const isSubscribed = await Subscribed.findOne({userId})
-    if(!isSubscribed){
-      return next(new CustomError("Not subscribed yet ", 404));
-    }
-    res.status(200).json("success")
+  if (isSubscribed) {
+    const currentDate = new Date();
+    const expireDate = new Date(isSubscribed.expireAt);
+    if (currentDate <= expireDate) {
+      res.status(200).json("success")
+    } 
+  }else{
+    return res.status(400)
+  }
   }) 
 

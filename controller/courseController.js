@@ -11,7 +11,7 @@ import { uploadQueue } from "../utils/uploadingWithQueue.js";
 import { Subscription } from "../model/subscriptionModel.js";
 import { Subscribed } from "../model/subscibedModel.js";
 import jwt from "jsonwebtoken";
-import Review from "../model/reviewModel.js"
+import Review from "../model/reviewModel.js";
 
 export const courseUpload = catchAsync(async (req, res, next) => {
   const {
@@ -89,11 +89,9 @@ export const getCourses = catchAsync(async (req, res, next) => {
       select: "username  profilePhoto",
     })
     .exec();
-   const categories = await Catagory.find({}).select("name")
-  res.status(200).json({ courses,categories });
+  const categories = await Catagory.find({}).select("name");
+  res.status(200).json({ courses, categories });
 });
-
-
 
 export const aboutCourse = catchAsync(async (req, res, next) => {
   let isPurchased = false;
@@ -110,14 +108,17 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
       isPurchased = true;
     }
   }
-  const reviews = await Review.find({courseId:req.params.id}).populate({path:"userId",select:"username profilePhoto"})
+  const reviews = await Review.find({ courseId: req.params.id }).populate({
+    path: "userId",
+    select: "username profilePhoto",
+  });
   const totalReviews = reviews.length;
-   let totalRating = 0;
-    reviews.forEach(review => {
+  let totalRating = 0;
+  reviews.forEach((review) => {
     totalRating += review.rating;
-});
-const averageRating = totalRating / totalReviews;
-  
+  });
+  const averageRating = totalRating / totalReviews;
+
   const course = await Course.findById(req.params.id)
     .populate({
       path: "tutorId",
@@ -134,7 +135,9 @@ const averageRating = totalRating / totalReviews;
       { name: 1, _id: 1 }
     ).sort({ order: 1 });
 
-    res.status(200).json({ course, chapters, isPurchased,reviews,averageRating });
+    res
+      .status(200)
+      .json({ course, chapters, isPurchased, reviews, averageRating });
   }
 });
 
@@ -175,8 +178,8 @@ export const addingModule = catchAsync(async (req, res, next) => {
   const videoName =
     crypto.createHash("md5").update(req.file.buffer).digest("hex") + ".mp4";
   const videoFileName = await videoStore(req.file.buffer, videoName);
- 
-   await Chapters.create({
+
+  await Chapters.create({
     name: modules,
     order,
     videoUrl: videoFileName,
@@ -200,12 +203,12 @@ export const getModuleList = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const userId = req.user.id;
   const purchased = await Purchase.findOne({ userId, courseId: id });
-  const reviews = await Review.findOne({userId})
+  const reviews = await Review.findOne({ userId, courseId: id });
 
   if (purchased) {
     const chapters = await Chapters.find({ courseId: id }).sort({ order: 1 });
 
-    res.status(200).json({ chapters,reviews });
+    res.status(200).json({ chapters, reviews });
   }
 });
 
@@ -215,10 +218,11 @@ export const getCatagory = catchAsync(async (req, res, next) => {
 });
 
 export const deleteChapter = catchAsync(async (req, res, next) => {
-  
   await Chapters.findByIdAndDelete(req.params.id);
 
-  const remainingChapters = await Chapters.find({ courseId:req.params.courseId });
+  const remainingChapters = await Chapters.find({
+    courseId: req.params.courseId,
+  });
 
   res.status(200).json({ remainingChapters, message: "Deleted Successfully" });
 });
@@ -232,56 +236,61 @@ export const subscriptionPlan = catchAsync(async (req, res, next) => {
     const expireDate = new Date(subscribed.expireAt);
     if (currentDate <= expireDate) {
       res.status(200).json({ subscriptions, subscribed });
-    } else {
-      return next(new CustomError("Date is Expired",403))
-    }
-  } 
+    }  
+  }
   res.status(200).json({ subscriptions });
 });
 
-
-
 export const getSearch = catchAsync(async (req, res, next) => {
   const searchText = req.query.searchText;
-
-  const results = await Course.find({
-        $or: [
-          { title: { $regex: searchText, $options: 'i' } }, 
-          { subtitle: { $regex: searchText, $options: 'i' } },
-          { tags: { $regex: searchText, $options: 'i' } },
-        
-        ]
-      
-    
-  });
-
-  if (!results.length) {
-    return next(new CustomError('No Search Result', 404));
+  const categories = req.query.categories; 
+  
+  const query = {}
+  if(searchText){
+    query["$or"] = [
+      { title: { $regex: searchText, $options: "i" } },
+      { subTitle: { $regex: searchText, $options: "i" } },
+      { tags: { $regex: searchText, $options: "i" } },
+    ] 
   }
+  if (categories) {
+    query.catagory = { $in: categories.split(',') }
+  }
+  console.log(query)
+  const results = await Course.find(query);
 
+  
+  if (!results.length) {
+    return next(new CustomError("No Search Result", 404));
+  }
   res.status(200).json(results);
 });
 
-export const getNewCourses = catchAsync(async(req,res,next)=>{
-  const courses=await Course.find({status:"Approved"}).sort({timeStamp:1}).limit(6)
-  console.log(courses)
-  res.status(200).json(courses)
-})
 
-export const addReviews = catchAsync(async(req,res,next)=>{
-  const userId = req.user.id
-   const{star,review} = req.body
-  let existingReview = await Review.findOne({userId})
-  
-  if(existingReview){
-    return next(new CustomError("You already reviewed",409))
+export const getNewCourses = catchAsync(async (req, res, next) => {
+  const courses = await Course.find({ status: "Approved" })
+    .sort({ timeStamp: 1 })
+    .limit(6);
+  console.log(courses);
+  res.status(200).json(courses);
+});
+
+export const addReviews = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const { star, review } = req.body;
+  let existingReview = await Review.findOne({
+    userId,
+    courseId: req.params.id,
+  });
+
+  if (existingReview) {
+    return next(new CustomError("You already reviewed", 409));
   }
-    const reviews =  await Review.create({
-         review,
-         rating:star,
-         userId:req.user.id,
-         courseId:req.params.id
-    
-  })
-  res.status(200).json(reviews)
-})
+  const reviews = await Review.create({
+    review,
+    rating: star,
+    userId: req.user.id,
+    courseId: req.params.id,
+  });
+  res.status(200).json(reviews);
+});
