@@ -206,8 +206,14 @@ export const getModuleList = catchAsync(async (req, res, next) => {
   const reviews = await Review.findOne({ userId, courseId: id });
 
   if (purchased) {
-    const chapters = await Chapters.find({ courseId: id }).sort({ order: 1 });
-
+    const chapters = await Chapters.find({ courseId: id }).populate({
+      path: 'courseId',
+      select: 'content title tutorId',
+      populate: {
+        path: 'tutorId',
+        select: 'username profilePhoto profession'
+      }
+    });
     res.status(200).json({ chapters, reviews });
   }
 });
@@ -256,7 +262,7 @@ export const getSearch = catchAsync(async (req, res, next) => {
   if (categories) {
     query.catagory = { $in: categories.split(',') }
   }
-  console.log(query)
+ 
   const results = await Course.find(query);
 
   

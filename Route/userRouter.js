@@ -38,6 +38,7 @@ router.get("/search",getSearch)
 router.get("/new-courses",getNewCourses)
 router.post("/review/:id",verifyToken,addReviews)
 
+
 router.put(
   "/profile",
   verifyToken,

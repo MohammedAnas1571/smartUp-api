@@ -29,6 +29,10 @@ const tutorSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
     profilePhoto: {
       type: String,
       default: "public/userprofile.png",
