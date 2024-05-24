@@ -44,7 +44,7 @@ export const tutorSignIn = catchAsync(async (req, res, next) => {
 
   const { password, ...rest } = user._doc;
 
-  console.log(rest);
+ 
 
   res
     .cookie("access_token", token, {
@@ -58,7 +58,7 @@ export const tutorSignIn = catchAsync(async (req, res, next) => {
 
 export const emailVerification = catchAsync(async (req, res, next) => {
   const { email } = req.body;
-  console.log(email);
+
   const user = await Tutor.findOne({ email });
   if (!user) return next(new CustomError("User Not Found", 404));
   const token = jwt.sign({ id: user._id }, process.env.SECRET, {
@@ -71,7 +71,7 @@ export const emailVerification = catchAsync(async (req, res, next) => {
 export const resetPassword = catchAsync(async (req, res, next) => {
   const { token, id } = req.params;
   const { password } = req.body;
-  console.log(password);
+
   console.log(12552);
   jwt.verify(token, process.env.SECRET, async (err) => {
     if (err) return next(new CustomError("Invalid token", 401));

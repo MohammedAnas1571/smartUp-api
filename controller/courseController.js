@@ -265,7 +265,7 @@ export const getSearch = catchAsync(async (req, res, next) => {
  
   const results = await Course.find(query);
 
-  
+    
   if (!results.length) {
     return next(new CustomError("No Search Result", 404));
   }
@@ -277,7 +277,6 @@ export const getNewCourses = catchAsync(async (req, res, next) => {
   const courses = await Course.find({ status: "Approved" })
     .sort({ timeStamp: 1 })
     .limit(6);
-  console.log(courses);
   res.status(200).json(courses);
 });
 

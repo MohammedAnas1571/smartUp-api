@@ -36,7 +36,7 @@ export const adminLogin = catchAsync(async (req, res, next) => {
 export const getUser = catchAsync(async (req, res, next) => {
   console.log(req.query.page);
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 3;
+  const pageSize = 2;
   const skip = (page - 1) * pageSize;
 
   const user = await User.find({}).skip(skip).limit(pageSize).exec();
@@ -62,17 +62,23 @@ export const getTutor = catchAsync(async (req, res, next) => {
   });
 });
 export const blockUser = catchAsync(async (req, res, next) => {
-  const { id, change } = req.body;
-  const user = await User.findByIdAndUpdate(id, { isBlocked: change });
+  const { id, isBlocked } = req.body;
+
+  const newIsBlocked = !isBlocked;
+  
+  const user = await User.findByIdAndUpdate(id, {$set:{ isBlocked:newIsBlocked }});
 
   if (!user) {
     return next(new CustomError("User not found.", 401));
   }
-  res.status(200).json("User is blocked");
+ 
+  res.status(200).json();
 });
 export const blockInstructor = catchAsync(async (req, res, next) => {
-  const { id, change } = req.body;
-  const user = await Tutor.findByIdAndUpdate(id, { isBlocked: change });
+   const { id, isBlocked } = req.body;
+  
+  const newIsBlocked = !isBlocked; 
+  const user = await Tutor.findByIdAndUpdate(id, { isBlocked: newIsBlocked });
 
   if (!user) {
     return next(new CustomError("User not found.", 401));
@@ -84,10 +90,9 @@ export const addCatagory = catchAsync(async (req, res, next) => {
   const { catagory } = req.body;
 
   const uniqueCatagory = catagory.toLowerCase();
-  console.log(uniqueCatagory);
+
   const categoryExist = await Catagory.findOne({
-    name: uniqueCatagory,
-    activeStatus: true,
+    name: uniqueCatagory
   });
   if (categoryExist) {
     return next(new CustomError("This Category already exists", 409));
@@ -98,17 +103,18 @@ export const addCatagory = catchAsync(async (req, res, next) => {
   await Catagory.create({
     name: uniqueCatagory,
   });
+ 
   res.status(200).json("Catagory is Created");
 });
 export const getCatagory = catchAsync(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
   const pageSize = 4;
   const skip = (page - 1) * pageSize;
-  const catagories = await Catagory.find({ activeStatus: true })
+  const catagories = await Catagory.find({})
     .skip(skip)
     .limit(pageSize)
     .exec();
-    const totalCount = await Catagory.countDocuments({ activeStatus: true });
+    const totalCount = await Catagory.countDocuments({ });
 
   const pageCount = Math.ceil(totalCount / pageSize);
   res.status(200).json({
@@ -120,7 +126,7 @@ export const getCatagory = catchAsync(async (req, res, next) => {
 export const editCatagory = catchAsync(async (req, res, next) => {
   const { id, catagory } = req.body;
   const uniqueCatagory = catagory.toLowerCase();
-  console.log(uniqueCatagory);
+  
   const categoryExist = await Catagory.findOne({ name: uniqueCatagory });
   if (categoryExist) {
     return next(new CustomError("This Category already exists", 409));
@@ -133,18 +139,22 @@ export const editCatagory = catchAsync(async (req, res, next) => {
   if (!updatedCategory) {
     return next(new CustomError("Resource not found!", 404));
   }
-  res.status(201).json({ updatedCategory });
+  
+  res.status(201).json("Updated Successfully");
 });
 
 export const deleteCatagory = catchAsync(async (req, res, next) => {
+   const {activeStatus} = req.body
+   const newStatus = !activeStatus
   const deletedCatagory = await Catagory.updateOne(
     { _id: req.params.id },
-    { $set: { activeStatus: false } }
+    { $set: { activeStatus: newStatus } }
   );
-  if (!deleteCatagory) {
+  if (!deletedCatagory) {
     return next(new CustomError(`Cannot Delete this Catagory`, 500));
   }
-  res.status(201).json("Successfully Deleted");
+
+  res.status(201).json("catagory deleted successfully")
 });
 export const getCourses = catchAsync(async (req, res, next) => {
   const courses = await Course.find({ isPublish: true });
