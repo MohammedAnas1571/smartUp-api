@@ -146,7 +146,7 @@ export const peymentForSubscription = catchAsync(async (req, res, next) => {
       res.status(200).json("success")
     } 
   }else{
-    return res.status(400)
+    return res.status(400).json("Not subscribed")
   }
   }) 
 

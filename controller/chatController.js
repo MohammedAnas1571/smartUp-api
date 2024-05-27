@@ -7,8 +7,8 @@ import { CustomError } from '../utils/customError.js'
 
 export const userChats = catchAsync(async(req,res,next)=>{
      console.log(req.params)
-    const chat = await chatModel.find({sender:req.params.userId,reciever:req.params.tutorId})
-    console.log(chat)
+    const chat = await chatModel.find({senderId:req.params.userId,recieverId:req.params.tutorId})
+   
     if (!chat) {
         return next(new CustomError("No chat are Available", 404));
     }

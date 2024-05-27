@@ -94,8 +94,10 @@ export const getCourses = catchAsync(async (req, res, next) => {
 });
 
 export const aboutCourse = catchAsync(async (req, res, next) => {
+ 
   let isPurchased = false;
   if (req.cookies.access_token) {
+   
     const token = req.cookies.access_token;
     const user = jwt.verify(token, process.env.TOKEN);
     req.user = user;
@@ -106,8 +108,12 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
 
     if (purchase) {
       isPurchased = true;
+ 
     }
+    
+    
   }
+  
   const reviews = await Review.find({ courseId: req.params.id }).populate({
     path: "userId",
     select: "username profilePhoto",

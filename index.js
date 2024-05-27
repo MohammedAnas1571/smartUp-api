@@ -45,6 +45,8 @@ app.use((err, req, res, next) => {
   });
 });
 
+
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -60,17 +62,19 @@ io.on("connection", (socket) => {
   });
 
   socket.on("chat message", (msg) => {
-    console.log(msg)
+
     const { recieverId,senderId,message} = msg
     const newChat = chatModel.create({
-      sender: senderId,
-      reciever: recieverId,
+     senderId,
+     recieverId,
       message,
     });
 
     io.emit("recive", msg);
   });
 });
+
+
 
 cron.schedule("*/30 * * * *", async () => {
   try {

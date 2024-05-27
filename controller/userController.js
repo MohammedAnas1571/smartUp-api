@@ -6,8 +6,8 @@ import { sendEmail } from "../utils/sendEmail.js";
 import OTP from "../model/otpModel.js";
 import jwt from "jsonwebtoken";
 import Tutor from "../model/tutorModel.js";
-import path from "path"
-import  fs from 'fs'
+// import path from "path"
+// import  fs from 'fs'
 
 export const userSignUp = catchAsync(async (req, res, next) => {
   const { username, email, role, password: newPassword } = req.body;
@@ -30,28 +30,39 @@ export const userSignUp = catchAsync(async (req, res, next) => {
 });
 
 export const userSignIn = catchAsync(async (req, res, next) => {
-  const { email, password: newPassword } = req.body;
-  const user = await User.findOne({ email });
-  if (!user)
-    return next(new CustomError("User is not Found please register", 401));
-  const isValid = bcrypt.compareSync(newPassword, user.password);
+  const { email, password } = req.body;
+   console.log(password)
+    const user = await User.findOne({ email });
+  if (!user) {
+    return next(new CustomError("User not found, please register", 401));
+  }
 
-  if (!isValid) return next(new CustomError("Invalid Password!", 401));
 
-  const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
-    expiresIn: "7d",
-  });
+  const isValid = bcrypt.compare(password, user.password);
+  if (!isValid) {
+    return next(new CustomError("Invalid password!", 401));
+  }
+  const token = jwt.sign({ id: user._id }, process.env.TOKEN, { expiresIn: '7d' });
+  const refreshToken = jwt.sign({ id: user._id }, process.env.TOKEN, { expiresIn: '7d' });
 
-  const { password, ...rest } = user._doc;
+  
+  const { password: _, ...rest } = user._doc;
+
   res
-    .cookie("access_token", token, {
+    .cookie('access_token', token, {
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    })
+    .cookie('refresh_token', refreshToken, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
     })
     .status(200)
     .json({ user: rest });
 });
+
 export const otpValidation = catchAsync(async (req, res, next) => {
   const { otp, id, role } = req.body;
   console.log(otp, id, role);
@@ -78,22 +89,55 @@ export const otpValidation = catchAsync(async (req, res, next) => {
   }
 
   await OTP.deleteOne({ userId: id });
-  console.log(user);
+
   const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
     expiresIn: "7d",
   });
 
   const { password, ...rest } = user._doc;
-  res.cookie("access_token", token, {
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-  });
+  const refreshToken = jwt.sign ({id:user._id},process.env.TOKEN,{expiresIn:"1d"})
+  res
+    .cookie("access_token", token, {
+      httpOnly: true, sameSite: 'strict'
+    })
+    .cookie("refresh_token",refreshToken,{httpOnly: true, 
+     
+      sameSite: 'strict'
+    })
 
   return res
     .status(200)
     .json({ user: rest, message: "Email Verification Successful" });
 });
+
+ export const refreshToken = catchAsync(async(req,res,next)=>{
+     
+  const { refresh_token } = req.cookies;
+ 
+
+  if (!refresh_token) {
+    return next(new CustomError("No refresh token provided", 401));
+  }
+
+    const decoded = jwt.verify(refresh_token, process.env.TOKEN);
+
+    const user = await User.findById(decoded.id);
+    
+    
+    if (!user) {
+      return next(new CustomError("User not found", 404));
+    }
+    const newAccessToken = jwt.sign({ id: user._id }, process.env.TOKEN, { expiresIn: '7d' });
+      
+    res.cookie('access_token', newAccessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'strict',
+    });
+
+    res.status(200).json({ message: "New access token generated" });
+ 
+})
 
 export const emailVerification = catchAsync(async (req, res, next) => {
   const { email } = req.body;
@@ -110,8 +154,8 @@ export const emailVerification = catchAsync(async (req, res, next) => {
 export const resetPassword = catchAsync(async (req, res, next) => {
   const { token, id } = req.params;
   const { password } = req.body;
-  console.log(password);
-  console.log(12552);
+ 
+ 
   jwt.verify(token, process.env.SECRET, async (err) => {
     if (err) return next(new CustomError("Invalid Otp", 401));
 
@@ -151,5 +195,41 @@ export const changeProfile = catchAsync(async (req, res, next) => {
 });
 
 export const signOut = catchAsync(async (req, res, next) => {
-  res.clearCookie("access_token").json("cookie cleared");
+  res.clearCookie('access_token', {
+    httpOnly: true,
+
+    sameSite: 'strict',
+  });
+
+  res.clearCookie('refresh_token', {
+    httpOnly: true,
+   
+    sameSite: 'strict',
+  });
+
+  res.status(200).json({ message: 'Cookies cleared, signed out successfully' });
 });
+
+export const changePassword = catchAsync(async(req,res,next)=>{
+  const{oldPassword,newPassword,confirmPassword} = req.body
+
+  console.log(oldPassword)
+  if(newPassword === confirmPassword){
+    const userId = req.user.id;
+    const user = await User.findById(userId)
+    const isMatch =  bcrypt.compare(oldPassword, user.password)
+    
+    if(!isMatch){
+      return next(new CustomError('Entered Password is incorrect',400))
+    }else{
+      const hashedPassword = await bcrypt.hash(newPassword,10)
+      user.password = hashedPassword
+      await user.save()
+      res.status(200).json("password changed successfully")
+      
+  
+    }
+  }
+ 
+
+})

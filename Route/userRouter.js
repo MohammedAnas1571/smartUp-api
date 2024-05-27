@@ -3,11 +3,13 @@ import { signUpValidator, signvalidation } from "../middleware/validation.js";
 import {
   userSignUp,
   userSignIn,
+  refreshToken,
   otpValidation,
   emailVerification,
   resetPassword,
   signOut,
   changeProfile,
+  changePassword
 } from "../controller/userController.js";
 import { profileMulter } from "../utils/multer.js";
 import { passportController } from "../utils/passport.js";
@@ -29,14 +31,16 @@ const router = express.Router();
 router.post("/signUp", signUpValidator, userSignUp);
 router.post("/signIn", cloudflare, signvalidation, userSignIn);
 router.post("/otp", otpValidation);
+router.post("/refresh-token",refreshToken)
 router.post("/verification/", emailVerification);
-router.post("/change_Password/:id/:token", resetPassword);
+router.post("/reset-password/:id/:token", resetPassword);
 router.get("/logout", signOut);
 router.get("/courses", getCourses);
 router.get("/getDetails/:id", aboutCourse);
 router.get("/search",getSearch)
 router.get("/new-courses",getNewCourses)
 router.post("/review/:id",verifyToken,addReviews)
+router.post("/change-password",verifyToken,changePassword)
 
 
 router.put(

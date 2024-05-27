@@ -3,10 +3,9 @@ import catchAsync from "../utils/catchAsync.js";
 import jwt from "jsonwebtoken";
 
 export const verifyToken = catchAsync(async (req, res, next) => {
-    
+ 
     const token = req.cookies.access_token;
-  
-    
+     
     if (!token) {
         return next(new CustomError("Token Not Found", 404));
     }

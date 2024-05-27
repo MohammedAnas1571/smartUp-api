@@ -1,11 +1,11 @@
 export async function cloudflare(req, res, next) {
-  const SECRET_KEY = "0x4AAAAAAAXY7P8aOThqxBEf6sAoS8074Pw";
+  
     const {token} = req.body
    
     const ip = req.ip
  
     let formData = new FormData();
-    formData.append("secret", SECRET_KEY);
+    formData.append("secret", process.env.CLOUDFIRE);
     formData.append("response", token);
     formData.append("remoteip", ip);
 
