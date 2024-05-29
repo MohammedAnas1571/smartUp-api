@@ -13,10 +13,12 @@ import { Server } from "socket.io";
 import chatRouter from "./Route/chatRouter.js";
 
 import http from "http";
-import chatModel from "./model/chatModel.js";
+
+import jwt from "jsonwebtoken"
 
 const app = express();
 connection();
+
 
 app.use(
   cors({
@@ -35,6 +37,8 @@ app.use("/tutor", tutorRoute);
 app.use("/admin", adminRoute);
 app.use("/chat", chatRouter);
 
+
+
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Error";
@@ -44,35 +48,72 @@ app.use((err, req, res, next) => {
     message,
   });
 });
-
-
-
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.ORIGIN,
-  },
-});
+    credentials:true
+  }});
 
-io.on("connection", (socket) => {
-  console.log("a user connected" + socket.id);
+  io.use((socket,next)=>{
+    const cookies = {}
+    const token = socket.handshake.headers.cookie?.split(";").forEach((cookie)=>{
+      const [key,value] = cookie.split("=")
+      cookies[key] = value
+    })
+    if(cookies?.access_token){
+      jwt.verify(cookies.access_token,process.env.SECRET,async(err,decoded)=>{
+        if (err) return next(new Error('Authentication error'));
+        const user = await User.findById(decoded._id)
+        socket.user = user;
+         return next();
+
+      })
+      
+    }else{
+        if(!cookies?.refresh_token){
+          return next(new Error("Forbidden"))
+        }
+        socket.emit("expired")
+    }
+    
+      
+    
+  })
+    
+  io.on("connection", (socket) => {
+    console.log("a user connected" )
+
+  // socket.on('joinRoom', ({ currentUserId}) => {
+  //   const room = `${currentUserId}`
+
+  //   socket.join(room);
+  //   console.log(`User joined room: ${room}`);
+  // });
+
+  // socket.on('message', async (data) => {
+  //     console.log(data)
+  //      const room = `${data.tutorId}_${data.userId}`
+       
+  //   io.to(room).emit('recive', data);
+    
+    
+  //   const { tutorId, userId, message, senderId  } = data;
+ 
+  //   const newChat = await chatModel.create({
+  //     senderId,
+  //     recieverId: senderId === tutorId ? userId : tutorId,
+  //     message,
+
+  //   });
+       
+  // });
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
+})
 
-  socket.on("chat message", (msg) => {
-
-    const { recieverId,senderId,message} = msg
-    const newChat = chatModel.create({
-     senderId,
-     recieverId,
-      message,
-    });
-
-    io.emit("recive", msg);
-  });
-});
 
 
 

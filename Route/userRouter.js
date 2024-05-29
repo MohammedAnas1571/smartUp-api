@@ -28,8 +28,10 @@ import { cloudflare } from "../middleware/CloudFire.js";
 import { verifyToken } from "../middleware/isAuth.js";
 const router = express.Router();
 
+
+
 router.post("/signUp", signUpValidator, userSignUp);
-router.post("/signIn", cloudflare, signvalidation, userSignIn);
+router.post("/signIn", userSignIn);
 router.post("/otp", otpValidation);
 router.post("/refresh-token",refreshToken)
 router.post("/verification/", emailVerification);
@@ -41,6 +43,8 @@ router.get("/search",getSearch)
 router.get("/new-courses",getNewCourses)
 router.post("/review/:id",verifyToken,addReviews)
 router.post("/change-password",verifyToken,changePassword)
+
+
 
 
 router.put(

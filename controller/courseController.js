@@ -82,16 +82,33 @@ export const courseUpload = catchAsync(async (req, res, next) => {
   return res.status(201).json("Courses are uploaded ");
 });
 
-export const getCourses = catchAsync(async (req, res, next) => {
-  const courses = await Course.find({ status: "Approved" })
-    .populate({
-      path: "tutorId",
-      select: "username  profilePhoto",
-    })
-    .exec();
-  const categories = await Catagory.find({}).select("name");
-  res.status(200).json({ courses, categories });
-});
+
+
+export const getCourses = catchAsync(async(req,res,next)=>{
+const page = parseInt(req.query.page) || 1
+const pageSize = 6;
+const skip = (page - 1) * pageSize;
+
+const courses = await Course.find({ status: "Approved" })
+  .populate({
+    path: "tutorId",
+    select: "username profilePhoto",
+  })
+  .skip(skip)
+  .limit(pageSize)
+  .select("image title updatedAt price isPublish")
+  .exec();
+
+const totalCount = await Course.countDocuments({ status: "Approved" });
+const pageCount = Math.ceil(totalCount / pageSize);
+
+
+
+const categories = await Catagory.find({}).select("name").exec();
+
+res.status(200).json({ courses, categories, pageCount });
+})
+
 
 export const aboutCourse = catchAsync(async (req, res, next) => {
  
@@ -108,9 +125,7 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
 
     if (purchase) {
       isPurchased = true;
- 
     }
-    
     
   }
   
@@ -118,6 +133,7 @@ export const aboutCourse = catchAsync(async (req, res, next) => {
     path: "userId",
     select: "username profilePhoto",
   });
+  
   const totalReviews = reviews.length;
   let totalRating = 0;
   reviews.forEach((review) => {

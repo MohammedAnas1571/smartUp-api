@@ -15,7 +15,7 @@ const chatSchema = mongoose.Schema(
     message: { type:String,required:true },
   },
   {
-    timeStamps: true,
+    timestamp: { type: Date, default: Date.now },
   }
 );
 const chatModel = mongoose.model("Chat", chatSchema);

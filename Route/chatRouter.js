@@ -1,10 +1,10 @@
 import express from 'express'
-import {  userChats } from '../controller/chatController.js'
+import {  userChats,chattedUsers} from '../controller/chatController.js'
 const router = express.Router()
 
 
-router.get('/:userId/:tutorId',userChats)
-// router.get('/find/:firstId/:secondId',findChat)
+router.get('/getChat/:userId/:tutorId',userChats)
+router.get('/getUsers/:tutorId',chattedUsers)
 // router.post('/message',addMessage)
 // router.get("/message/:chatId",getMessages)
 export default router

@@ -31,33 +31,32 @@ export const userSignUp = catchAsync(async (req, res, next) => {
 
 export const userSignIn = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
-   console.log(password)
-    const user = await User.findOne({ email });
+  console.log(password);
+  const user = await User.findOne({ email });
   if (!user) {
     return next(new CustomError("User not found, please register", 401));
   }
-
 
   const isValid = bcrypt.compare(password, user.password);
   if (!isValid) {
     return next(new CustomError("Invalid password!", 401));
   }
-  const token = jwt.sign({ id: user._id }, process.env.TOKEN, { expiresIn: '7d' });
-  const refreshToken = jwt.sign({ id: user._id }, process.env.TOKEN, { expiresIn: '7d' });
+  const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
+    expiresIn: "5m",
+  });
+  const refreshToken = jwt.sign({ id: user._id }, process.env.TOKEN);
 
-  
   const { password: _, ...rest } = user._doc;
 
   res
-    .cookie('access_token', token, {
+    .cookie("access_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+
+      maxAge: 5 * 60 * 1000,
     })
-    .cookie('refresh_token', refreshToken, {
+    .cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000,
     })
     .status(200)
     .json({ user: rest });
@@ -65,7 +64,7 @@ export const userSignIn = catchAsync(async (req, res, next) => {
 
 export const otpValidation = catchAsync(async (req, res, next) => {
   const { otp, id, role } = req.body;
-  console.log(otp, id, role);
+
   const validOtp = await OTP.findOne({ userId: id });
 
   if (!validOtp) return next(new CustomError("No Valid Otp Found", 404));
@@ -91,53 +90,53 @@ export const otpValidation = catchAsync(async (req, res, next) => {
   await OTP.deleteOne({ userId: id });
 
   const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
-    expiresIn: "7d",
+    expiresIn: "5m",
   });
 
   const { password, ...rest } = user._doc;
-  const refreshToken = jwt.sign ({id:user._id},process.env.TOKEN,{expiresIn:"1d"})
+  const refreshToken = jwt.sign({ id: user._id }, process.env.TOKEN);
   res
     .cookie("access_token", token, {
-      httpOnly: true, sameSite: 'strict'
+      httpOnly: true,
+      maxAge: 5 * 60 * 1000,
     })
-    .cookie("refresh_token",refreshToken,{httpOnly: true, 
-     
-      sameSite: 'strict'
-    })
+    .cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      maxAge: 365 * 24 * 60 * 60 * 1000,
+    });
 
   return res
     .status(200)
     .json({ user: rest, message: "Email Verification Successful" });
 });
 
- export const refreshToken = catchAsync(async(req,res,next)=>{
-     
+export const refreshToken = catchAsync(async (req, res, next) => {
   const { refresh_token } = req.cookies;
- 
+
+  console.log(req.cookies);
 
   if (!refresh_token) {
-    return next(new CustomError("No refresh token provided", 401));
+    return next(new CustomError("Forbidden", 403));
   }
 
-    const decoded = jwt.verify(refresh_token, process.env.TOKEN);
+  const decoded = jwt.verify(refresh_token, process.env.TOKEN);
 
-    const user = await User.findById(decoded.id);
-    
-    
-    if (!user) {
-      return next(new CustomError("User not found", 404));
-    }
-    const newAccessToken = jwt.sign({ id: user._id }, process.env.TOKEN, { expiresIn: '7d' });
-      
-    res.cookie('access_token', newAccessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'strict',
-    });
+  const user = await User.findById(decoded.id);
 
-    res.status(200).json({ message: "New access token generated" });
- 
-})
+  if (!user) {
+    return next(new CustomError("User not found", 404));
+  }
+  const newAccessToken = jwt.sign({ id: user._id }, process.env.TOKEN, {
+    expiresIn: "5m",
+  });
+
+  res.cookie("access_token", newAccessToken, {
+    httpOnly: true,
+    maxAge: 5 * 60 * 1000,
+  });
+
+  res.status(200).json({ message: "New access token generated" });
+});
 
 export const emailVerification = catchAsync(async (req, res, next) => {
   const { email } = req.body;
@@ -145,7 +144,7 @@ export const emailVerification = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email });
   if (!user) return next(new CustomError("user not found", 404));
   const token = jwt.sign({ id: user._id }, process.env.SECRET, {
-    expiresIn: "1d",
+    expiresIn: "5d",
   });
   await sendEmail(user, token);
   res.status(200).json("Please Click the link that sent to your mail");
@@ -154,8 +153,7 @@ export const emailVerification = catchAsync(async (req, res, next) => {
 export const resetPassword = catchAsync(async (req, res, next) => {
   const { token, id } = req.params;
   const { password } = req.body;
- 
- 
+
   jwt.verify(token, process.env.SECRET, async (err) => {
     if (err) return next(new CustomError("Invalid Otp", 401));
 
@@ -175,7 +173,7 @@ export const googleAuth = function (accessToken, refreshToken, profile, cb) {
 
 export const changeProfile = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
- 
+
   const { username, about } = req.body;
   const user = await User.findById(userId);
   // if (user && user.profilePhoto && user.profilePhoto.startsWith("public/")) {
@@ -190,46 +188,36 @@ export const changeProfile = catchAsync(async (req, res, next) => {
     { new: true }
   );
 
-
   res.status(200).json(updatedUser);
 });
 
 export const signOut = catchAsync(async (req, res, next) => {
-  res.clearCookie('access_token', {
+  res.clearCookie("access_token", {
     httpOnly: true,
-
-    sameSite: 'strict',
   });
 
-  res.clearCookie('refresh_token', {
+  res.clearCookie("refresh_token", {
     httpOnly: true,
-   
-    sameSite: 'strict',
   });
 
-  res.status(200).json({ message: 'Cookies cleared, signed out successfully' });
+  res.status(200).json({ message: "Cookies cleared, signed out successfully" });
 });
 
-export const changePassword = catchAsync(async(req,res,next)=>{
-  const{oldPassword,newPassword,confirmPassword} = req.body
+export const changePassword = catchAsync(async (req, res, next) => {
+  const { oldPassword, newPassword, confirmPassword } = req.body;
 
-  console.log(oldPassword)
-  if(newPassword === confirmPassword){
+  if (newPassword === confirmPassword) {
     const userId = req.user.id;
-    const user = await User.findById(userId)
-    const isMatch =  bcrypt.compare(oldPassword, user.password)
-    
-    if(!isMatch){
-      return next(new CustomError('Entered Password is incorrect',400))
-    }else{
-      const hashedPassword = await bcrypt.hash(newPassword,10)
-      user.password = hashedPassword
-      await user.save()
-      res.status(200).json("password changed successfully")
-      
-  
+    const user = await User.findById(userId);
+    const isMatch = bcrypt.compare(oldPassword, user.password);
+
+    if (!isMatch) {
+      return next(new CustomError("Entered Password is incorrect", 400));
+    } else {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+      res.status(200).json("password changed successfully");
     }
   }
- 
-
-})
+});
