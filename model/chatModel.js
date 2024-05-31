@@ -4,17 +4,13 @@ const chatSchema = mongoose.Schema(
   {
     senderID: {
       type: mongoose.Schema.Types.ObjectId,
-
-      required: true,
     },
     receiverID: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
     },
-    messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
   },
   {
-    timestamp: { type: Date, default: Date.now },
+    timestamp: true,
   }
 );
 const Chat = mongoose.model("Chat", chatSchema);

@@ -16,6 +16,7 @@ import { Server } from "socket.io";
 import chatRouter from "./Route/chatRouter.js";
 import Chat from "./model/chatModel.js";
 import Message from "./model/messageModel.js";
+import mongoose from "mongoose";
 
 const app = express();
 connection();
@@ -86,33 +87,31 @@ io.use((socket, next) => {
 
 io.on("connection", (socket) => {
   console.log(
-    socket.user.username + "with role: " + socket.user.role + " connected ",
-    socket.user._id
+    socket.user.username + "with role: " + socket.user.role + " connected "
   );
 
   socket.join(socket.user?._id.toString());
 
-  socket.on("messages_page", async (tutorID) => {
-    console.log(socket.user._id);
-    const conversations = await Chat.findOne({
+  socket.on("messages_page", async (userID) => {
+    const conversation = await Chat.findOne({
       $or: [
-        { senderID: socket.user._id, receiverID: tutorID },
-        { senderID: tutorID, receiverID: socket.user._id },
+        { senderID: socket.user._id, receiverID: userID },
+        { senderID: userID, receiverID: socket.user._id },
       ],
-    }).populate("messages");
-    console.log(JSON.stringify(conversations));
-    socket.emit("messages", conversations);
+    });
+
+    if (!conversation) return;
+
+    const user = await User.findById(userID).select("-password")
+
+    const messages = await Message.find({ chatID: conversation._id });
+
+    socket.emit("user", user)
+    socket.emit("messages", messages);
   });
 
-  socket.on("sidebar_users", async (entityID) => {
-    const senders = await Chat.distinct("senderID", { receiverID: entityID });
-    const receivers = await Chat.distinct("receiverID", { senderID: entityID });
-
-    const usersID = Array.from(new Set([senders, receivers]));
-
-    console.log(usersID);
-
-    const users = await User.find({ _id: { $in: usersID } });
+  socket.on("sidebar_users", async (tutorID) => {
+    const users = await fetchSidebarUsers(tutorID);
 
     socket.emit("users", users);
   });
@@ -120,38 +119,75 @@ io.on("connection", (socket) => {
   socket.on("send_message", async ({ senderID, receiverID, message }) => {
     let conversation = await Chat.findOne({
       $or: [
-        { senderID, receiverID },
-        { senderID: receiverID, recieverID: senderID },
+        { senderID: senderID, receiverID: receiverID },
+        { senderID: receiverID, receiverID: senderID },
       ],
     });
 
+    console.log(conversation);
+
     if (!conversation) {
-      conversation = await Chat.create({
+      const newConversation = new Chat({
         senderID,
         receiverID,
       });
+
+      conversation = await newConversation.save();
     }
 
     const newMessage = await Message.create({
-      senderID,
-      receiverID,
+      senderID: socket.user._id,
+      chatID: conversation._id,
       message,
     });
 
-    await conversation.updateOne({
-      $push: {
-        messages: newMessage._id,
-      },
-    });
+    // const conversations = await Chat.find({
+    //   $or: [{ senderID: receicerID }, { receiverID: rece }],
+    // });
+
+    // const users = await Promise.all(
+    //   conversations.map(async (conversation) => {
+    //     const user = await User.findOne({
+    //       $or: [
+    //         { _id: conversation.senderID },
+    //         { _id: conversation.receiverID },
+    //       ],
+    //     });
+    //     return user;
+    //   })
+    // );
+
+    const users = await fetchSidebarUsers(receiverID);
 
     io.to(senderID).emit("message", newMessage);
     io.to(receiverID).emit("message", newMessage);
+    io.to(receiverID).emit("users", users);
   });
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
 });
+
+async function fetchSidebarUsers(tutorID) {
+  const conversations = await Chat.find({
+    $or: [
+      { senderID: mongoose.Types.ObjectId.createFromHexString(tutorID) },
+      { receiverID: mongoose.Types.ObjectId.createFromHexString(tutorID) },
+    ],
+  });
+
+  const users = await Promise.all(
+    conversations.map(async (conversation) => {
+      const user = await User.findOne({
+        $or: [{ _id: conversation.senderID }, { _id: conversation.receiverID }],
+      });
+      return user;
+    })
+  );
+
+  return users;
+}
 
 cron.schedule("*/30 * * * *", async () => {
   try {

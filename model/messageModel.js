@@ -2,12 +2,8 @@ import mongoose from "mongoose";
 
 const messageSchema = mongoose.Schema(
   {
-    senderID: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
-    receiverID: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
+    senderID: { type: mongoose.Schema.Types.ObjectId },
+    chatID: { type: mongoose.Schema.Types.ObjectId },
     message: {
       type: String,
     },
