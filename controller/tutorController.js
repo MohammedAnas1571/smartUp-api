@@ -38,7 +38,7 @@ export const tutorSignIn = catchAsync(async (req, res, next) => {
   if (!isValid)
     return next(new CustomError("Invalid Username Or Password ", 401));
 
-  const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
+  const token = jwt.sign({ id: user._id, role:"Tutor" }, process.env.TOKEN, {
     expiresIn: "7d",
   });
 

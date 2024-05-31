@@ -41,8 +41,8 @@ export const userSignIn = catchAsync(async (req, res, next) => {
   if (!isValid) {
     return next(new CustomError("Invalid password!", 401));
   }
-  const token = jwt.sign({ id: user._id }, process.env.TOKEN, {
-    expiresIn: "5m",
+  const token = jwt.sign({ id: user._id,role:"User" }, process.env.TOKEN, {
+    expiresIn: "5d",
   });
   const refreshToken = jwt.sign({ id: user._id }, process.env.TOKEN);
 
@@ -52,7 +52,7 @@ export const userSignIn = catchAsync(async (req, res, next) => {
     .cookie("access_token", token, {
       httpOnly: true,
 
-      maxAge: 5 * 60 * 1000,
+      maxAge: 5* 24* 60 * 60 * 1000,
     })
     .cookie("refresh_token", refreshToken, {
       httpOnly: true,
@@ -113,7 +113,7 @@ export const otpValidation = catchAsync(async (req, res, next) => {
 export const refreshToken = catchAsync(async (req, res, next) => {
   const { refresh_token } = req.cookies;
 
-  console.log(req.cookies);
+ 
 
   if (!refresh_token) {
     return next(new CustomError("Forbidden", 403));

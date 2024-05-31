@@ -32,7 +32,7 @@ export const chattedUsers = catchAsync(async (req, res, next) => {
   
     
     const userIds = Array.from(new Set([...senders, recievers]));
-    console.log("User IDs:", userIds);
+  
   
     if (userIds.length === 0) {
       return res.status(200).json([]);
