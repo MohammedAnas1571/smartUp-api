@@ -47,6 +47,7 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -87,8 +88,9 @@ io.use((socket, next) => {
 
 io.on("connection", (socket) => {
   console.log(
-    socket.user.username + "with role: " + socket.user.role + " connected "
-  );
+    socket.user.username + "with role: " + socket.user.role + " connected " 
+  )
+
 
   socket.join(socket.user?._id.toString());
 
@@ -123,7 +125,7 @@ io.on("connection", (socket) => {
         { senderID: receiverID, receiverID: senderID },
       ],
     });
-
+  //  console.log(conversation +"kdjfsdklfjs")
     console.log(conversation);
 
     if (!conversation) {
@@ -141,22 +143,7 @@ io.on("connection", (socket) => {
       message,
     });
 
-    // const conversations = await Chat.find({
-    //   $or: [{ senderID: receicerID }, { receiverID: rece }],
-    // });
-
-    // const users = await Promise.all(
-    //   conversations.map(async (conversation) => {
-    //     const user = await User.findOne({
-    //       $or: [
-    //         { _id: conversation.senderID },
-    //         { _id: conversation.receiverID },
-    //       ],
-    //     });
-    //     return user;
-    //   })
-    // );
-
+    
     const users = await fetchSidebarUsers(receiverID);
 
     io.to(senderID).emit("message", newMessage);
@@ -166,6 +153,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
+    socket.broadcast.emit("callended")
   });
 });
 
@@ -176,7 +164,7 @@ async function fetchSidebarUsers(tutorID) {
       { receiverID: mongoose.Types.ObjectId.createFromHexString(tutorID) },
     ],
   });
-
+  //  console.log(conversations+"anas")
   const users = await Promise.all(
     conversations.map(async (conversation) => {
       const user = await User.findOne({
