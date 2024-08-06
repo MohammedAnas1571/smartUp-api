@@ -55,35 +55,35 @@ const io = new Server(server, {
   },
 });
 
-io.use((socket, next) => {
-  const cookies = {};
-  const cookieHeader = socket.handshake.headers.cookie;
+// io.use((socket, next) => {
+//   const cookies = {};
+//   const cookieHeader = socket.handshake.headers.cookie;
 
-  if (cookieHeader) {
-    cookieHeader.split(";").forEach((cookie) => {
-      const [key, value] = cookie.trim().split("=");
-      cookies[key] = value;
-    });
-  }
+//   if (cookieHeader) {
+//     cookieHeader.split(";").forEach((cookie) => {
+//       const [key, value] = cookie.trim().split("=");
+//       cookies[key] = value;
+//     });
+//   }
 
-  if (!cookies?.access_token) {
-    return next(new Error("AuthenticationRequired"));
-  }
+//   if (!cookies?.access_token) {
+//     return next(new Error("AuthenticationRequired"));
+//   }
 
-  jwt.verify(cookies.access_token, process.env.TOKEN, async (err, decoded) => {
-    if (err) {
-      return next(new Error("Authentication error"));
-    }
-    let user;
-    if (decoded.role === "User") {
-      user = await User.findById(decoded.id).select("-password");
-    } else {
-      user = await Tutor.findById(decoded.id).select("-password");
-    }
-    socket.user = user;
-    return next();
-  });
-});
+//   jwt.verify(cookies.access_token, process.env.TOKEN, async (err, decoded) => {
+//     if (err) {
+//       return next(new Error("Authentication error"));
+//     }
+//     let user;
+//     if (decoded.role === "User") {
+//       user = await User.findById(decoded.id).select("-password");
+//     } else {
+//       user = await Tutor.findById(decoded.id).select("-password");
+//     }
+//     socket.user = user;
+//     return next();
+//   });
+// });
 
 io.on("connection", (socket) => {
   console.log(
