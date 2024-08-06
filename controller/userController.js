@@ -64,6 +64,7 @@ export const userSignIn = catchAsync(async (req, res, next) => {
 
 export const otpValidation = catchAsync(async (req, res, next) => {
   const { otp, id, role } = req.body;
+  console.log(req.body)
 
   const validOtp = await OTP.findOne({ userId: id });
 
