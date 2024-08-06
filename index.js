@@ -47,11 +47,10 @@ app.use((err, req, res, next) => {
     message,
   });
 });
-
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin:["https://smartup-seven.vercel.app"],
+    origin: "https://smartup-seven.vercel.app/",
     credentials: true,
   },
 });
@@ -87,10 +86,9 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  // console.log(
-  //   socket.user.username + "with role: " + socket.user.role + " connected " 
-  // )
-
+  console.log(
+    `${socket.user.username} with role: ${socket.user.role} connected`
+  );
 
   socket.join(socket.user?._id.toString());
 
@@ -104,11 +102,11 @@ io.on("connection", (socket) => {
 
     if (!conversation) return;
 
-    const user = await User.findById(userID).select("-password")
+    const user = await User.findById(userID).select("-password");
 
     const messages = await Message.find({ chatID: conversation._id });
 
-    socket.emit("user", user)
+    socket.emit("user", user);
     socket.emit("messages", messages);
   });
 
@@ -125,8 +123,6 @@ io.on("connection", (socket) => {
         { senderID: receiverID, receiverID: senderID },
       ],
     });
-  //  console.log(conversation +"kdjfsdklfjs")
-    console.log(conversation);
 
     if (!conversation) {
       const newConversation = new Chat({
@@ -143,7 +139,6 @@ io.on("connection", (socket) => {
       message,
     });
 
-    
     const users = await fetchSidebarUsers(receiverID);
 
     io.to(senderID).emit("message", newMessage);
@@ -153,7 +148,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
-    socket.broadcast.emit("callended")
+    socket.broadcast.emit("callended");
   });
 });
 
@@ -164,7 +159,7 @@ async function fetchSidebarUsers(tutorID) {
       { receiverID: mongoose.Types.ObjectId.createFromHexString(tutorID) },
     ],
   });
-  //  console.log(conversations+"anas")
+
   const users = await Promise.all(
     conversations.map(async (conversation) => {
       const user = await User.findOne({
