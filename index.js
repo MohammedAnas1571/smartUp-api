@@ -87,9 +87,9 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  console.log(
-    `${socket.user.username} with role: ${socket.user.role} connected`
-  );
+  // console.log(
+  //   `${socket.user.username} with role: ${socket.user.role} connected`
+  // );
 
   socket.join(socket.user?._id.toString());
 
