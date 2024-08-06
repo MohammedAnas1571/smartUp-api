@@ -48,13 +48,13 @@ export const userSignIn = catchAsync(async (req, res, next) => {
 
   const { password: _, ...rest } = user._doc;
 
-  res
-    .cookie("access_token", token, {
-      httpOnly: true,
-
-      maxAge: 5* 24* 60 * 60 * 1000,
-    })
-    .cookie("refresh_token", refreshToken, {
+  res.cookie("access_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', 
+    sameSite: 'None', 
+    maxAge: 5 * 24 * 60 * 60 * 1000,
+  });
+    res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       maxAge: 365 * 24 * 60 * 60 * 1000,
     })
