@@ -69,9 +69,9 @@ export const otpValidation = catchAsync(async (req, res, next) => {
 
   if (!validOtp) return next(new CustomError("No Valid Otp Found", 404));
 
-  const isMatch = await bcrypt.compare(otp, validOtp.otp);
+  
 
-  if (!isMatch)
+  if (validOtp.otp !== otp)
     return next(new CustomError("Otp is Not Match! Try Again ", 401));
 
   let user;

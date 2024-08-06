@@ -52,11 +52,10 @@ export const sendEmail = async ({ username, email, _id,role }, token) => {
            <p> Best regards</p> `,
       };
 
-      const hasedOtp = bcrypt.hashSync(otp.toString(), 10);
 
       const newOtp = new OTP({
         userId: _id,
-        otp: hasedOtp,
+        otp,
       });
 
       await OTP.deleteMany({ userId: _id });
