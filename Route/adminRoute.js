@@ -1,8 +1,8 @@
 import express from  'express';
-import { getUser,blockUser, getTutor, addCatagory,getCatagory,adminLogin,editCatagory,deleteCatagory,getCourses,setApproval,blockInstructor,createSubscriptions,getSubscription,deleteSubscription } from '../controller/adminController.js';
+import { getUser,blockUser, getTutor, addCatagory,getCatagory,adminLogin,editCatagory,deleteCatagory,getCourses,setApproval,blockInstructor,createSubscriptions,getSubscription,deleteSubscription,dashBordDetails } from '../controller/adminController.js';
 import { verifyToken } from '../middleware/isAuth.js';
  const router = express.Router()
-
+router.get("/dashboard",verifyToken,dashBordDetails)
 router.get("/users",verifyToken,getUser)
 router.get("/tutor",verifyToken,getTutor)
 router.put("/block-user",verifyToken,blockUser)

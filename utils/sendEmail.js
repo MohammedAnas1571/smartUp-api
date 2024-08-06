@@ -63,7 +63,7 @@ export const sendEmail = async ({ username, email, _id,role }, token) => {
 
       await newOtp.save();
 
-      // await transporter.sendMail(mailOption);
+      await transporter.sendMail(mailOption);
     }
   } catch (error) {
     console.log(error.message);
