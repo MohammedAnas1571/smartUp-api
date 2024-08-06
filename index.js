@@ -51,7 +51,7 @@ app.use((err, req, res, next) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.ORIGIN,
+    origin:["https://smartup-seven.vercel.app"],
     credentials: true,
   },
 });
