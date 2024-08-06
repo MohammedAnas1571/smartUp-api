@@ -50,7 +50,7 @@ app.use((err, req, res, next) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://smartup-seven.vercel.app", 
+    origin:  process.env.ORIGIN,
     credentials:true 
   },
 });
@@ -58,14 +58,15 @@ const io = new Server(server, {
 io.use((socket, next) => {
   const cookies = {};
   const cookieHeader = socket.handshake.headers.cookie;
-
+  console.log(cookieHeader)
   if (cookieHeader) {
     cookieHeader.split(";").forEach((cookie) => {
       const [key, value] = cookie.trim().split("=");
       cookies[key] = value;
     });
   }
-
+   
+      
   if (!cookies?.access_token) {
     return next(new Error("AuthenticationRequired"));
   }
