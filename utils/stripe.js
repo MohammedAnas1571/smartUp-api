@@ -1,47 +1,33 @@
 import "dotenv/config";
 import Stripe from "stripe";
-
 import Purchase from "../model/PurchaseModel.js";
 import { Subscribed } from "../model/subscibedModel.js";
+
 const stripe = Stripe(process.env.STRIPE_KEY);
 let endpointSecret;
 // endpointSecret = "whsec_8fe1e37467e40d3afe2a62581bbd39231779ce48e5e0113cc48fa246abe4500b";
 
 export const stripePayment = async (product, res, userId) => {
-
-
-
-
   let line_items;
   let paymentMode;
   let successUrl;
   let cancelUrl;
-  let metadataDetails
-
+  let metadataDetails;
   let tenure = new Date();
   const date = new Date();
 
-if (product.billingPeriod === "week") {
-   tenure = new Date(
-       date.getFullYear(),
-       date.getMonth(),
-       date.getDate() + 7
-   );
-}
-if (product.billingPeriod === "month") {
-   tenure = new Date(
-       date.getFullYear(),
-       date.getMonth() + 1,
-       date.getDate()
-   );
-}
+  if (product.billingPeriod === "week") {
+    tenure = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7);
+  }
+  if (product.billingPeriod === "month") {
+    tenure = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  }
 
-const expiry = tenure.toString();
+  const expiry = tenure.toString();
 
+  const origin = process.env.ORIGIN || "http://localhost:3000"; 
 
   if (product.billingPeriod) {
-
-
     line_items = [
       {
         price_data: {
@@ -54,25 +40,21 @@ const expiry = tenure.toString();
           recurring: {
             interval: product.billingPeriod,
           },
-          
         },
-       
         quantity: 1,
       },
     ];
 
     paymentMode = "subscription";
-    successUrl = `${process.env.ORIGIN}/instructor/subscription-success`;
-    cancelUrl = `${process.env.ORIGIN}/instructor/subscription`
-    
-    metadataDetails = {
-        userId: userId,
-        subscription: product._id,
-        type:"subscription",
-        expires:expiry
-    }
-  
+    successUrl = `${origin}/instructor/subscription-success`;
+    cancelUrl = `${origin}/instructor/subscription`;
 
+    metadataDetails = {
+      userId: userId,
+      subscription: product._id,
+      type: "subscription",
+      expires: expiry,
+    };
   } else {
     line_items = [
       {
@@ -88,20 +70,18 @@ const expiry = tenure.toString();
       },
     ];
     paymentMode = "payment";
-    successUrl = `${process.env.ORIGIN}/success/${product._id}`;
-    cancelUrl = `${process.env.ORIGIN}/payment/${product._id}`;
-      metadataDetails = {
+    successUrl = `${origin}/success/${product._id}`;
+    cancelUrl = `${origin}/payment/${product._id}`;
+    metadataDetails = {
       userId,
       courseId: product._id,
       price: product.price,
-      }
-
+    };
   }
 
-      
   const customer = await stripe.customers.create({
-    metadata:metadataDetails ,
-    name: "Jhon",
+    metadata: metadataDetails,
+    name: "John",
     address: {
       city: "New York",
       country: "US",
@@ -110,7 +90,7 @@ const expiry = tenure.toString();
       postal_code: "10001",
       state: "NY",
     },
-  });  
+  });
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -119,12 +99,13 @@ const expiry = tenure.toString();
       customer: customer.id,
       mode: paymentMode,
       success_url: successUrl,
-      cancel_url: cancelUrl
+      cancel_url: cancelUrl,
     });
 
     return res.json({ url: session.url });
   } catch (error) {
     console.error("Error creating Stripe session:", error);
+    res.status(500).send("Internal Server Error");
   }
 };
 
@@ -146,29 +127,25 @@ export const getEvent = async (req, res) => {
   } else {
     data = req.body.data.object;
     eventType = req.body.type;
-   
   }
 
   if (eventType === "checkout.session.completed") {
- 
     try {
-    
       const customer = await stripe.customers.retrieve(data.customer);
-      console.log(customer.metadata)
-      if(customer.metadata.type === "subscription"){
-        await Subscribed.create ({
-         userId:customer.metadata.userId,
-         subscriptionId: customer.metadata.subscription,
-         expireAt:customer.metadata.expires
-   
-        })
-         }else{
-          await Purchase.create({
-            userId: customer.metadata.userId,
-            courseId: customer.metadata.courseId,
-            price: customer.metadata.price,
-          });
-         }
+      console.log(customer.metadata);
+      if (customer.metadata.type === "subscription") {
+        await Subscribed.create({
+          userId: customer.metadata.userId,
+          subscriptionId: customer.metadata.subscription,
+          expireAt: customer.metadata.expires,
+        });
+      } else {
+        await Purchase.create({
+          userId: customer.metadata.userId,
+          courseId: customer.metadata.courseId,
+          price: customer.metadata.price,
+        });
+      }
     } catch (err) {
       console.log(err.message);
     }
