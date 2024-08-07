@@ -215,6 +215,7 @@ export const addingModule = catchAsync(async (req, res, next) => {
 export const purchaseCoures = catchAsync(async (req, res, next) => {
   const { course } = req.body;
   const userId = req.user.id;
+  console.log(req.body)
   stripePayment(course, res, userId);
 });
 export const purchaseSuccess = catchAsync(async (req, res, next) => {
