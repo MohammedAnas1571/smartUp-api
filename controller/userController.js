@@ -51,7 +51,8 @@ export const userSignIn = catchAsync(async (req, res, next) => {
   res
     .cookie("access_token", token, {
       httpOnly: true,
-
+      secure :true,
+      sameSite:"None",
       maxAge: 5* 24* 60 * 60 * 1000,
     })
     .cookie("refresh_token", refreshToken, {
